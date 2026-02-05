@@ -1,15 +1,15 @@
 server:
-  port: 9091
+  port: 9094
 spring:
   application:
-    name: basket
+    name: invoice
   rabbitmq:
     host: localhost
     port: 5672
     username: guest
     password: guest
   datasource:
-    url: jdbc:postgresql://localhost:5432/basket_db
+    url: jdbc:postgresql://localhost:5432/invoice_db
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver

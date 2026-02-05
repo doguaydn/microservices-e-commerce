@@ -1,8 +1,11 @@
 package com.dogu.auth.user.impl;
 
+import com.dogu.auth.events.UserEventPublisher;
+import com.dogu.auth.events.UserRegisteredEvent;
 import com.dogu.auth.user.api.UserDto;
 import com.dogu.auth.user.api.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,10 +16,23 @@ public class UserServiceImpl implements UserService {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
+    @Autowired
+    UserEventPublisher eventPublisher;
+
     @Override
     public UserDto save(UserDto param) {
         User user = toEntity(param, null);
+        user.setPassword(passwordEncoder.encode(param.getPassword()));
         userRepository.save(user);
+
+        // Publish user registered event
+        eventPublisher.publishUserRegistered(
+                new UserRegisteredEvent(user.getId(), user.getEmail(), user.getName())
+        );
+
         return toDto(user);
     }
 
@@ -49,11 +65,30 @@ public class UserServiceImpl implements UserService {
     }
 
     public UserDto login(String email, String password) {
-        User user = userRepository.findByEmailAndPassword(email, password);
-        if (user == null) {
+        User user = userRepository.findByEmail(email);
+        if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
             throw new RuntimeException("Invalid email or password");
         }
         return toDto(user);
+    }
+
+    public void forgotPassword(String email, String newPassword) {
+        User user = userRepository.findByEmail(email);
+        if (user == null) {
+            throw new RuntimeException("User not found with email: " + email);
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
+    public void changePassword(int userId, String oldPassword, String newPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new RuntimeException("Invalid old password");
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
     }
 
     private User toEntity(UserDto request, User entity) {

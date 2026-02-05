@@ -2,14 +2,21 @@ package com.dogu.basket.basketitem.impl;
 
 import com.dogu.basket.basketitem.api.BasketItemDto;
 import com.dogu.basket.basketitem.api.BasketItemService;
+import com.dogu.basket.basketitem.api.CheckoutResult;
+import com.dogu.basket.events.OrderCreatedEvent;
+import com.dogu.basket.events.OrderEventPublisher;
+import com.dogu.basket.events.OrderItemEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class BasketItemServiceImpl implements BasketItemService {
@@ -19,6 +26,9 @@ public class BasketItemServiceImpl implements BasketItemService {
 
     @Autowired
     RestTemplate restTemplate;
+
+    @Autowired
+    OrderEventPublisher eventPublisher;
 
     private static final String STOCK_SERVICE_URL = "http://localhost:9093";
     private static final String AUTH_SERVICE_URL = "http://localhost:9092";
@@ -70,6 +80,58 @@ public class BasketItemServiceImpl implements BasketItemService {
         BasketItem entity = basketItemRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Basket item not found"));
         basketItemRepository.delete(entity);
+    }
+
+    @Override
+    @Transactional
+    public CheckoutResult checkout(int userId) {
+        validateUserExists(userId);
+
+        List<BasketItem> items = basketItemRepository.findByUserId(userId);
+        if (items.isEmpty()) {
+            throw new RuntimeException("Basket is empty");
+        }
+
+        List<OrderItemEvent> orderItems = new ArrayList<>();
+        double totalAmount = 0.0;
+
+        for (BasketItem item : items) {
+            Map<String, Object> product = getProductInfo(item.getProductId());
+            double price = ((Number) product.get("price")).doubleValue();
+            String productName = (String) product.get("name");
+
+            orderItems.add(new OrderItemEvent(
+                    item.getProductId(),
+                    productName,
+                    item.getQuantity(),
+                    price
+            ));
+
+            totalAmount += price * item.getQuantity();
+        }
+
+        String orderId = UUID.randomUUID().toString();
+
+        // Publish order created event
+        eventPublisher.publishOrderCreated(
+                new OrderCreatedEvent(orderId, userId, orderItems, totalAmount)
+        );
+
+        // Clear basket
+        basketItemRepository.deleteAll(items);
+
+        CheckoutResult result = new CheckoutResult();
+        result.setOrderId(orderId);
+        result.setUserId(userId);
+        result.setItems(items.stream().map(this::toDto).toList());
+        result.setTotalAmount(totalAmount);
+        return result;
+    }
+
+    private Map<String, Object> getProductInfo(int productId) {
+        ResponseEntity<Map> response = restTemplate.getForEntity(
+                STOCK_SERVICE_URL + "/products/" + productId, Map.class);
+        return response.getBody();
     }
 
     private void validateUserExists(int userId) {

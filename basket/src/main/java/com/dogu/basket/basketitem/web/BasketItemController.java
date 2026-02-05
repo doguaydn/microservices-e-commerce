@@ -2,6 +2,7 @@ package com.dogu.basket.basketitem.web;
 
 import com.dogu.basket.basketitem.api.BasketItemDto;
 import com.dogu.basket.basketitem.api.BasketItemService;
+import com.dogu.basket.basketitem.api.CheckoutResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -48,6 +49,19 @@ public class BasketItemController {
     @DeleteMapping("/{id}")
     public void delete(@PathVariable int id) {
         service.delete(id);
+    }
+
+    @PostMapping("/checkout/{userId}")
+    public CheckoutResponse checkout(@PathVariable int userId) {
+        CheckoutResult result = service.checkout(userId);
+
+        CheckoutResponse response = new CheckoutResponse();
+        response.orderId = result.getOrderId();
+        response.userId = result.getUserId();
+        response.items = result.getItems().stream().map(this::toResponse).toList();
+        response.totalAmount = result.getTotalAmount();
+        response.message = "Order created successfully";
+        return response;
     }
 
     public BasketItemResponse toResponse(BasketItemDto dto) {

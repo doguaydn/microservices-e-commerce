@@ -54,6 +54,16 @@ public class UserController {
         return new LoginResponse(null, userDto.getEmail(), userDto.getName(), userDto.getSurname());
     }
 
+    @PostMapping("/forgot-password")
+    public void forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        userServiceImpl.forgotPassword(request.getEmail(), request.getNewPassword());
+    }
+
+    @PostMapping("/change-password")
+    public void changePassword(@RequestBody ChangePasswordRequest request) {
+        userServiceImpl.changePassword(request.getUserId(), request.getOldPassword(), request.getNewPassword());
+    }
+
     public UserResponse toResponse(UserDto dto) {
         UserResponse response = new UserResponse();
         response.id = dto.getId();

@@ -9,4 +9,5 @@ public interface BasketItemService {
     public List<BasketItemDto> getByUserId(int userId);
     public BasketItemDto update(BasketItemDto info);
     public void delete(int id);
+    public CheckoutResult checkout(int userId);
 }

@@ -7,9 +7,11 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="basket" />
-        <module name="stock" />
+        <module name="notification" />
         <module name="auth" />
         <module name="eureka" />
+        <module name="invoice" />
+        <module name="stock" />
         <module name="gateway" />
       </profile>
     </annotationProcessing>
@@ -20,6 +22,8 @@
       <module name="basket" options="-parameters" />
       <module name="eureka" options="-parameters" />
       <module name="gateway" options="-parameters" />
+      <module name="invoice" options="-parameters" />
+      <module name="notification" options="-parameters" />
       <module name="stock" options="-parameters" />
     </option>
   </component>
