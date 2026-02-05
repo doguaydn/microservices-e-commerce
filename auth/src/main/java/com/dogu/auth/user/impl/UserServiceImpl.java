@@ -2,6 +2,9 @@ package com.dogu.auth.user.impl;
 
 import com.dogu.auth.events.UserEventPublisher;
 import com.dogu.auth.events.UserRegisteredEvent;
+import com.dogu.auth.exception.EmailAlreadyExistsException;
+import com.dogu.auth.exception.InvalidCredentialsException;
+import com.dogu.auth.exception.UserNotFoundException;
 import com.dogu.auth.user.api.UserDto;
 import com.dogu.auth.user.api.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +30,7 @@ public class UserServiceImpl implements UserService {
         // Email kontrolü
         User existingUser = userRepository.findByEmail(param.getEmail());
         if (existingUser != null) {
-            throw new RuntimeException("Email already registered: " + param.getEmail());
+            throw new EmailAlreadyExistsException(param.getEmail());
         }
 
         User user = toEntity(param, null);
@@ -45,7 +48,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto get(int id) {
         User entity = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(id));
         return toDto(entity);
     }
 
@@ -58,7 +61,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto update(UserDto info) {
         User user = userRepository.findById(info.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(info.getId()));
         user = toEntity(info, user);
         return toDto(userRepository.save(user));
     }
@@ -66,14 +69,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public void delete(int id) {
         User entity = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(id));
         userRepository.delete(entity);
     }
 
     public UserDto login(String email, String password) {
         User user = userRepository.findByEmail(email);
         if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
-            throw new RuntimeException("Invalid email or password");
+            throw new InvalidCredentialsException();
         }
         return toDto(user);
     }
@@ -81,7 +84,7 @@ public class UserServiceImpl implements UserService {
     public void forgotPassword(String email, String newPassword) {
         User user = userRepository.findByEmail(email);
         if (user == null) {
-            throw new RuntimeException("User not found with email: " + email);
+            throw new UserNotFoundException("User not found with email: " + email);
         }
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
@@ -89,9 +92,9 @@ public class UserServiceImpl implements UserService {
 
     public void changePassword(int userId, String oldPassword, String newPassword) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(userId));
         if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
-            throw new RuntimeException("Invalid old password");
+            throw new InvalidCredentialsException();
         }
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
