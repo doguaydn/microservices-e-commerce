@@ -91,6 +91,20 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
+    public int migratePasswords() {
+        List<User> users = userRepository.findAll();
+        int migratedCount = 0;
+        for (User user : users) {
+            // BCrypt hash "$2a$" ile başlar, zaten hashlenmiş ise atla
+            if (user.getPassword() != null && !user.getPassword().startsWith("$2a$")) {
+                user.setPassword(passwordEncoder.encode(user.getPassword()));
+                userRepository.save(user);
+                migratedCount++;
+            }
+        }
+        return migratedCount;
+    }
+
     private User toEntity(UserDto request, User entity) {
         if (entity == null) {
             entity = new User();

@@ -64,6 +64,12 @@ public class UserController {
         userServiceImpl.changePassword(request.getUserId(), request.getOldPassword(), request.getNewPassword());
     }
 
+    @PostMapping("/migrate-passwords")
+    public String migratePasswords() {
+        int count = userServiceImpl.migratePasswords();
+        return count + " users migrated to BCrypt";
+    }
+
     public UserResponse toResponse(UserDto dto) {
         UserResponse response = new UserResponse();
         response.id = dto.getId();

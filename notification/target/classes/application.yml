@@ -1,0 +1,10 @@
+server:
+  port: 9095
+spring:
+  application:
+    name: notification
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
