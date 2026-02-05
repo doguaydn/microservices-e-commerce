@@ -1,5 +1,6 @@
 package com.dogu.auth.user.web;
 
+import com.dogu.auth.config.JwtService;
 import com.dogu.auth.user.api.UserDto;
 import com.dogu.auth.user.api.UserService;
 import com.dogu.auth.user.impl.UserServiceImpl;
@@ -16,6 +17,9 @@ public class UserController {
 
     @Autowired
     UserServiceImpl userServiceImpl;
+
+    @Autowired
+    JwtService jwtService;
 
     @PostMapping
     public UserResponse save(@RequestBody UserRequest info) {
@@ -51,7 +55,8 @@ public class UserController {
     @PostMapping("/login")
     public LoginResponse login(@RequestBody UserLoginRequest request) {
         UserDto userDto = userServiceImpl.login(request.getEmail(), request.getPassword());
-        return new LoginResponse(null, userDto.getEmail(), userDto.getName(), userDto.getSurname());
+        String token = jwtService.generateToken(userDto.getId(), userDto.getEmail(), userDto.getName());
+        return new LoginResponse(token, userDto.getEmail(), userDto.getName(), userDto.getSurname());
     }
 
     @PostMapping("/forgot-password")

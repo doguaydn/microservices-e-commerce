@@ -24,6 +24,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto save(UserDto param) {
+        // Email kontrolü
+        User existingUser = userRepository.findByEmail(param.getEmail());
+        if (existingUser != null) {
+            throw new RuntimeException("Email already registered: " + param.getEmail());
+        }
+
         User user = toEntity(param, null);
         user.setPassword(passwordEncoder.encode(param.getPassword()));
         userRepository.save(user);
