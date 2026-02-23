@@ -6,16 +6,18 @@ public class InvoiceCreatedEvent {
     private int invoiceId;
     private String orderId;
     private int userId;
+    private String email;
     private double totalAmount;
     private LocalDateTime timestamp;
 
     public InvoiceCreatedEvent() {
     }
 
-    public InvoiceCreatedEvent(int invoiceId, String orderId, int userId, double totalAmount) {
+    public InvoiceCreatedEvent(int invoiceId, String orderId, int userId, String email, double totalAmount) {
         this.invoiceId = invoiceId;
         this.orderId = orderId;
         this.userId = userId;
+        this.email = email;
         this.totalAmount = totalAmount;
         this.timestamp = LocalDateTime.now();
     }
@@ -42,6 +44,14 @@ public class InvoiceCreatedEvent {
 
     public void setUserId(int userId) {
         this.userId = userId;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public double getTotalAmount() {

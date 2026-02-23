@@ -38,12 +38,13 @@ public class OrderEventListener {
                     event.getTotalAmount()
             );
 
-            // Publish invoice created event
+            // Publish invoice created event with email
             eventPublisher.publishInvoiceCreated(
                     new InvoiceCreatedEvent(
                             invoice.getId(),
                             invoice.getOrderId(),
                             invoice.getUserId(),
+                            event.getEmail(),
                             invoice.getTotalAmount()
                     )
             );

@@ -116,6 +116,9 @@ public class BasketItemServiceImpl implements BasketItemService {
     public CheckoutResult checkout(int userId) {
         validateUserExists(userId);
 
+        // Fetch user email for event
+        String userEmail = getUserEmail(userId);
+
         List<BasketItem> items = basketItemRepository.findByUserId(userId);
         if (items.isEmpty()) {
             throw new RuntimeException("Basket is empty");
@@ -162,7 +165,7 @@ public class BasketItemServiceImpl implements BasketItemService {
 
         // Publish order created event
         eventPublisher.publishOrderCreated(
-                new OrderCreatedEvent(orderId, userId, orderItems, totalAmount)
+                new OrderCreatedEvent(orderId, userId, userEmail, orderItems, totalAmount)
         );
 
         // Clear basket
@@ -180,6 +183,17 @@ public class BasketItemServiceImpl implements BasketItemService {
         ResponseEntity<Map> response = restTemplate.getForEntity(
                 STOCK_SERVICE_URL + "/products/" + productId, Map.class);
         return response.getBody();
+    }
+
+    private String getUserEmail(int userId) {
+        try {
+            ResponseEntity<Map> response = restTemplate.getForEntity(
+                    AUTH_SERVICE_URL + "/users/" + userId, Map.class);
+            Map<String, Object> user = response.getBody();
+            return user != null ? (String) user.get("email") : null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private void validateUserExists(int userId) {

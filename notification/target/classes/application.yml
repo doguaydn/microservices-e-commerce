@@ -8,3 +8,14 @@ spring:
     port: 5672
     username: guest
     password: guest
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:doguaydin.comp@gmail.com}
+    password: ${MAIL_PASSWORD:sqix bbdf xksk vqmb}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true

@@ -6,6 +6,7 @@ import java.util.List;
 public class OrderCreatedEvent {
     private String orderId;
     private int userId;
+    private String email;
     private List<OrderItemEvent> items;
     private double totalAmount;
     private LocalDateTime timestamp;
@@ -13,9 +14,10 @@ public class OrderCreatedEvent {
     public OrderCreatedEvent() {
     }
 
-    public OrderCreatedEvent(String orderId, int userId, List<OrderItemEvent> items, double totalAmount) {
+    public OrderCreatedEvent(String orderId, int userId, String email, List<OrderItemEvent> items, double totalAmount) {
         this.orderId = orderId;
         this.userId = userId;
+        this.email = email;
         this.items = items;
         this.totalAmount = totalAmount;
         this.timestamp = LocalDateTime.now();
@@ -35,6 +37,14 @@ public class OrderCreatedEvent {
 
     public void setUserId(int userId) {
         this.userId = userId;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public List<OrderItemEvent> getItems() {
