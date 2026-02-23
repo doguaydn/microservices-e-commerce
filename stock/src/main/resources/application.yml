@@ -3,6 +3,8 @@ server:
 spring:
   application:
     name: stock
+  cache:
+    type: hazelcast
   datasource:
     url: jdbc:postgresql://localhost:5432/stock_db
     username: postgres

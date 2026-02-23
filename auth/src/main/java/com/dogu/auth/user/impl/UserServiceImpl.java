@@ -8,6 +8,9 @@ import com.dogu.auth.exception.UserNotFoundException;
 import com.dogu.auth.user.api.UserDto;
 import com.dogu.auth.user.api.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +29,7 @@ public class UserServiceImpl implements UserService {
     UserEventPublisher eventPublisher;
 
     @Override
+    @CacheEvict(value = "users-all", allEntries = true)
     public UserDto save(UserDto param) {
         // Email kontrolü
         User existingUser = userRepository.findByEmail(param.getEmail());
@@ -46,6 +50,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Cacheable(value = "users", key = "#id")
     public UserDto get(int id) {
         User entity = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
@@ -53,12 +58,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Cacheable(value = "users-all")
     public List<UserDto> getAll() {
         List<User> users = userRepository.findAll();
         return users.stream().map(this::toDto).toList();
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "users", key = "#info.id"),
+            @CacheEvict(value = "users-all", allEntries = true)
+    })
     public UserDto update(UserDto info) {
         User user = userRepository.findById(info.getId())
                 .orElseThrow(() -> new UserNotFoundException(info.getId()));
@@ -67,6 +77,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "users", key = "#id"),
+            @CacheEvict(value = "users-all", allEntries = true)
+    })
     public void delete(int id) {
         User entity = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
@@ -81,6 +95,7 @@ public class UserServiceImpl implements UserService {
         return toDto(user);
     }
 
+    @CacheEvict(value = {"users", "users-all"}, allEntries = true)
     public void forgotPassword(String email, String newPassword) {
         User user = userRepository.findByEmail(email);
         if (user == null) {
@@ -90,6 +105,10 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "users", key = "#userId"),
+            @CacheEvict(value = "users-all", allEntries = true)
+    })
     public void changePassword(int userId, String oldPassword, String newPassword) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));

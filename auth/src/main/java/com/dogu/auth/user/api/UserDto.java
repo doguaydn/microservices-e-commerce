@@ -1,6 +1,6 @@
 package com.dogu.auth.user.api;
 
-public class UserDto {
+public class UserDto implements java.io.Serializable {
     private int id;
     private String name;
     private String surname;

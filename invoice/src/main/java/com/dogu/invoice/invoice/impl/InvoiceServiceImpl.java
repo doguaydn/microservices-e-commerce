@@ -3,6 +3,9 @@ package com.dogu.invoice.invoice.impl;
 import com.dogu.invoice.invoice.api.InvoiceDto;
 import com.dogu.invoice.invoice.api.InvoiceService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -15,6 +18,10 @@ public class InvoiceServiceImpl implements InvoiceService {
     private InvoiceRepository invoiceRepository;
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "invoices-by-user", key = "#userId"),
+            @CacheEvict(value = "invoices-all", allEntries = true)
+    })
     public InvoiceDto createFromOrder(String orderId, int userId, String itemsJson, double totalAmount) {
         Invoice invoice = new Invoice();
         invoice.setOrderId(orderId);
@@ -29,6 +36,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
+    @Cacheable(value = "invoices", key = "#id")
     public InvoiceDto get(int id) {
         Invoice invoice = invoiceRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Invoice not found"));
@@ -36,6 +44,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
+    @Cacheable(value = "invoices-by-order", key = "#orderId")
     public InvoiceDto getByOrderId(String orderId) {
         Invoice invoice = invoiceRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new RuntimeException("Invoice not found"));
@@ -43,12 +52,14 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
+    @Cacheable(value = "invoices-by-user", key = "#userId")
     public List<InvoiceDto> getByUserId(int userId) {
         return invoiceRepository.findByUserId(userId)
                 .stream().map(this::toDto).toList();
     }
 
     @Override
+    @Cacheable(value = "invoices-all")
     public List<InvoiceDto> getAll() {
         return invoiceRepository.findAll()
                 .stream().map(this::toDto).toList();

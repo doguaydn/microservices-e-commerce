@@ -7,6 +7,9 @@ import com.dogu.basket.events.OrderCreatedEvent;
 import com.dogu.basket.events.OrderEventPublisher;
 import com.dogu.basket.events.OrderItemEvent;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +37,10 @@ public class BasketItemServiceImpl implements BasketItemService {
     private static final String AUTH_SERVICE_URL = "http://localhost:9092";
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "basket-by-user", key = "#param.userId"),
+            @CacheEvict(value = "basket-items", allEntries = true)
+    })
     public BasketItemDto save(BasketItemDto param) {
         validateUserExists(param.getUserId());
         validateProductExists(param.getProductId());
@@ -45,6 +52,7 @@ public class BasketItemServiceImpl implements BasketItemService {
     }
 
     @Override
+    @Cacheable(value = "basket-items", key = "#id")
     public BasketItemDto get(int id) {
         BasketItem entity = basketItemRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Basket item not found"));
@@ -58,6 +66,7 @@ public class BasketItemServiceImpl implements BasketItemService {
     }
 
     @Override
+    @Cacheable(value = "basket-by-user", key = "#userId")
     public List<BasketItemDto> getByUserId(int userId) {
         validateUserExists(userId);
         List<BasketItem> basketItems = basketItemRepository.findByUserId(userId);
@@ -65,6 +74,10 @@ public class BasketItemServiceImpl implements BasketItemService {
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "basket-items", key = "#info.id"),
+            @CacheEvict(value = "basket-by-user", key = "#info.userId")
+    })
     public BasketItemDto update(BasketItemDto info) {
         validateProductExists(info.getProductId());
         checkProductStock(info.getProductId(), info.getQuantity());
@@ -76,6 +89,10 @@ public class BasketItemServiceImpl implements BasketItemService {
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "basket-items", key = "#id"),
+            @CacheEvict(value = "basket-by-user", allEntries = true)
+    })
     public void delete(int id) {
         BasketItem entity = basketItemRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Basket item not found"));
@@ -84,6 +101,10 @@ public class BasketItemServiceImpl implements BasketItemService {
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "basket-items", allEntries = true),
+            @CacheEvict(value = "basket-by-user", key = "#userId")
+    })
     public CheckoutResult checkout(int userId) {
         validateUserExists(userId);
 

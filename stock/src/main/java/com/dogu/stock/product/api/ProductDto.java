@@ -1,6 +1,6 @@
 package com.dogu.stock.product.api;
 
-public class ProductDto {
+public class ProductDto implements java.io.Serializable {
     private int id;
     private String name;
     private String description;

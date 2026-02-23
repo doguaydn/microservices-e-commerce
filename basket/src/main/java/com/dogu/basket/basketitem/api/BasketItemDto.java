@@ -1,6 +1,6 @@
 package com.dogu.basket.basketitem.api;
 
-public class BasketItemDto {
+public class BasketItemDto implements java.io.Serializable {
     private int id;
     private int userId;
     private int productId;

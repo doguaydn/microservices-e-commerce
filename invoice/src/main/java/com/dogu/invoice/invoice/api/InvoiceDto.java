@@ -2,7 +2,7 @@ package com.dogu.invoice.invoice.api;
 
 import java.time.LocalDateTime;
 
-public class InvoiceDto {
+public class InvoiceDto implements java.io.Serializable {
     private int id;
     private String orderId;
     private int userId;

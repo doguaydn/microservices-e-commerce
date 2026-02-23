@@ -3,6 +3,9 @@ package com.dogu.stock.product.impl;
 import com.dogu.stock.product.api.ProductDto;
 import com.dogu.stock.product.api.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,6 +17,9 @@ public class ProductServiceImpl implements ProductService {
     ProductRepository productRepository;
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "products-all", allEntries = true)
+    })
     public ProductDto save(ProductDto param) {
         Product product = toEntity(param, null);
         productRepository.save(product);
@@ -21,6 +27,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Cacheable(value = "products", key = "#id")
     public ProductDto get(int id) {
         Product entity = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
@@ -28,12 +35,17 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Cacheable(value = "products-all")
     public List<ProductDto> getAll() {
         List<Product> products = productRepository.findAll();
         return products.stream().map(this::toDto).toList();
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "products", key = "#info.id"),
+            @CacheEvict(value = "products-all", allEntries = true)
+    })
     public ProductDto update(ProductDto info) {
         Product product = productRepository.findById(info.getId())
                 .orElseThrow(() -> new RuntimeException("Product not found"));
@@ -42,6 +54,10 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "products", key = "#id"),
+            @CacheEvict(value = "products-all", allEntries = true)
+    })
     public void delete(int id) {
         Product entity = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));

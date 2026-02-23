@@ -3,6 +3,8 @@ server:
 spring:
   application:
     name: invoice
+  cache:
+    type: hazelcast
   rabbitmq:
     host: localhost
     port: 5672
