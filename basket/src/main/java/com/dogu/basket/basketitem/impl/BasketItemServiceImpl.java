@@ -8,6 +8,7 @@ import com.dogu.basket.events.OrderEventPublisher;
 import com.dogu.basket.events.OrderItemEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.http.ResponseEntity;
@@ -74,10 +75,10 @@ public class BasketItemServiceImpl implements BasketItemService {
     }
 
     @Override
-    @Caching(evict = {
-            @CacheEvict(value = "basket-items", key = "#info.id"),
-            @CacheEvict(value = "basket-by-user", key = "#info.userId")
-    })
+    @Caching(
+            put = {@CachePut(value = "basket-items", key = "#info.id")},
+            evict = {@CacheEvict(value = "basket-by-user", key = "#info.userId")}
+    )
     public BasketItemDto update(BasketItemDto info) {
         validateProductExists(info.getProductId());
         checkProductStock(info.getProductId(), info.getQuantity());

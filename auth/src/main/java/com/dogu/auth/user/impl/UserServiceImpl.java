@@ -9,6 +9,7 @@ import com.dogu.auth.user.api.UserDto;
 import com.dogu.auth.user.api.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -65,10 +66,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Caching(evict = {
-            @CacheEvict(value = "users", key = "#info.id"),
-            @CacheEvict(value = "users-all", allEntries = true)
-    })
+    @Caching(
+            put = {@CachePut(value = "users", key = "#info.id")},
+            evict = {@CacheEvict(value = "users-all", allEntries = true)}
+    )
     public UserDto update(UserDto info) {
         User user = userRepository.findById(info.getId())
                 .orElseThrow(() -> new UserNotFoundException(info.getId()));
