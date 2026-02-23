@@ -15,7 +15,7 @@ const fetchOrders = async () => {
   try {
     const res = await orderApi.getByUser(user.value.id)
     orders.value = res.data
-  } catch (err) {
+  } catch {
     error.value = 'Failed to load orders'
   } finally {
     loading.value = false
@@ -23,10 +23,10 @@ const fetchOrders = async () => {
 }
 
 const cancelOrder = async (orderId) => {
-  if (!confirm('Cancel this order?')) return
+  if (!confirm('Are you sure you want to cancel this order?')) return
   try {
     await orderApi.cancel(orderId)
-    success.value = 'Order cancelled'
+    success.value = 'Order cancelled successfully'
     fetchOrders()
     clearMsg()
   } catch (err) {
@@ -35,10 +35,7 @@ const cancelOrder = async (orderId) => {
   }
 }
 
-const badgeClass = (status) => {
-  const s = status?.toLowerCase()
-  return `badge badge-${s}`
-}
+const badgeClass = (status) => `badge badge-${status?.toLowerCase()}`
 
 const parseItems = (items) => {
   if (!items) return []
@@ -48,9 +45,7 @@ const parseItems = (items) => {
   return items
 }
 
-const clearMsg = () => {
-  setTimeout(() => { success.value = ''; error.value = '' }, 3000)
-}
+const clearMsg = () => setTimeout(() => { success.value = ''; error.value = '' }, 3000)
 
 onMounted(fetchOrders)
 </script>
@@ -59,28 +54,31 @@ onMounted(fetchOrders)
   <div class="page">
     <div class="page-header">
       <h1>My Orders</h1>
-      <p>Track your order history</p>
+      <p>Track and manage your orders</p>
     </div>
 
-    <div v-if="!user" class="alert alert-info">Please login to view your orders.</div>
+    <div v-if="!user" class="alert alert-info">Please sign in to view your orders.</div>
     <div v-if="success" class="alert alert-success">{{ success }}</div>
     <div v-if="error" class="alert alert-error">{{ error }}</div>
 
-    <div v-if="loading && user" class="loading">Loading orders...</div>
+    <div v-if="loading && user" class="loading">
+      <div class="spinner"></div>
+      <p>Loading orders...</p>
+    </div>
 
     <template v-else-if="user">
       <div v-if="orders.length === 0" class="empty-state">
+        <div class="empty-icon">&#128230;</div>
         <h3>No orders yet</h3>
-        <p>Complete a checkout to see your orders here.</p>
+        <p>Your order history will appear here after your first purchase.</p>
+        <router-link to="/products" class="btn btn-primary mt-2">Start Shopping</router-link>
       </div>
 
-      <div v-for="order in orders" :key="order.id || order.orderId" class="card mb-1">
-        <div class="flex-between mb-1">
+      <div v-for="order in orders" :key="order.id || order.orderId" class="order-card">
+        <div class="order-header">
           <div>
-            <strong>Order #{{ order.orderId }}</strong>
-            <span class="text-sm text-light ml-1" style="margin-left: 0.5rem;">
-              {{ order.createdAt }}
-            </span>
+            <span class="order-id">Order #{{ order.orderId?.substring(0, 8) }}...</span>
+            <span class="order-date" style="margin-left: 1rem;">{{ order.createdAt }}</span>
           </div>
           <span :class="badgeClass(order.status)">{{ order.status }}</span>
         </div>
@@ -102,8 +100,11 @@ onMounted(fetchOrders)
           </tbody>
         </table>
 
-        <div class="flex-between mt-1">
-          <strong>Total: ${{ (order.totalAmount || 0).toFixed(2) }}</strong>
+        <div class="flex-between mt-2">
+          <div>
+            <span class="text-secondary">Total: </span>
+            <strong style="font-size: 1.1rem; color: var(--accent);">${{ (order.totalAmount || 0).toFixed(2) }}</strong>
+          </div>
           <button
             v-if="order.status === 'PENDING'"
             class="btn btn-danger btn-sm"

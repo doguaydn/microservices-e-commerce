@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { authApi } from '../api'
+import ThreeBackground from '../components/ThreeBackground.vue'
 
 const router = useRouter()
 const form = ref({ name: '', surname: '', email: '', password: '' })
@@ -15,7 +16,7 @@ const register = async () => {
   loading.value = true
   try {
     await authApi.register(form.value)
-    success.value = 'Registration successful! Redirecting to login...'
+    success.value = 'Account created! Redirecting to sign in...'
     setTimeout(() => router.push('/login'), 1500)
   } catch (err) {
     error.value = err.response?.data?.message || err.response?.data || 'Registration failed'
@@ -26,19 +27,23 @@ const register = async () => {
 </script>
 
 <template>
-  <div class="auth-container">
-    <div class="card">
-      <h1>Register</h1>
+  <div class="auth-page">
+    <ThreeBackground :particle-count="80" color1="#764ba2" color2="#667eea" />
+    <div class="auth-card">
+      <h1>Create Account</h1>
+      <p class="auth-subtitle">Join NovaMart today</p>
       <div v-if="error" class="alert alert-error">{{ error }}</div>
       <div v-if="success" class="alert alert-success">{{ success }}</div>
       <form @submit.prevent="register">
-        <div class="form-group">
-          <label>Name</label>
-          <input v-model="form.name" type="text" placeholder="Name" required />
-        </div>
-        <div class="form-group">
-          <label>Surname</label>
-          <input v-model="form.surname" type="text" placeholder="Surname" required />
+        <div class="grid-2">
+          <div class="form-group">
+            <label>First Name</label>
+            <input v-model="form.name" type="text" placeholder="John" required />
+          </div>
+          <div class="form-group">
+            <label>Last Name</label>
+            <input v-model="form.surname" type="text" placeholder="Doe" required />
+          </div>
         </div>
         <div class="form-group">
           <label>Email</label>
@@ -46,14 +51,14 @@ const register = async () => {
         </div>
         <div class="form-group">
           <label>Password</label>
-          <input v-model="form.password" type="password" placeholder="Password" required />
+          <input v-model="form.password" type="password" placeholder="Create a password" required />
         </div>
-        <button type="submit" class="btn btn-primary" style="width:100%" :disabled="loading">
-          {{ loading ? 'Registering...' : 'Register' }}
+        <button type="submit" class="btn btn-primary btn-block btn-lg" :disabled="loading">
+          {{ loading ? 'Creating account...' : 'Create Account' }}
         </button>
       </form>
-      <p class="text-center text-sm mt-1">
-        Already have an account? <router-link to="/login">Login</router-link>
+      <p class="auth-footer">
+        Already have an account? <router-link to="/login">Sign in</router-link>
       </p>
     </div>
   </div>

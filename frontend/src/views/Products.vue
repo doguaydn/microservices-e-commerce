@@ -7,16 +7,25 @@ const loading = ref(true)
 const error = ref('')
 const success = ref('')
 const showAddModal = ref(false)
+const searchQuery = ref('')
 const newProduct = ref({ name: '', description: '', price: 0, quantity: 0 })
 
 const user = computed(() => JSON.parse(localStorage.getItem('user') || 'null'))
+
+const filteredProducts = computed(() => {
+  if (!searchQuery.value) return products.value
+  const q = searchQuery.value.toLowerCase()
+  return products.value.filter(p =>
+    p.name?.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q)
+  )
+})
 
 const fetchProducts = async () => {
   loading.value = true
   try {
     const res = await productApi.getAll()
     products.value = res.data
-  } catch (err) {
+  } catch {
     error.value = 'Failed to load products'
   } finally {
     loading.value = false
@@ -26,7 +35,7 @@ const fetchProducts = async () => {
 const addProduct = async () => {
   try {
     await productApi.create(newProduct.value)
-    success.value = 'Product added!'
+    success.value = 'Product added successfully!'
     showAddModal.value = false
     newProduct.value = { name: '', description: '', price: 0, quantity: 0 }
     fetchProducts()
@@ -46,10 +55,11 @@ const addToBasket = async (product) => {
       price: product.price,
       quantity: 1
     })
-    success.value = `${product.name} added to basket!`
+    success.value = `${product.name} added to cart!`
+    window.dispatchEvent(new Event('cart-updated'))
     clearMsg()
-  } catch (err) {
-    error.value = 'Failed to add to basket'
+  } catch {
+    error.value = 'Failed to add to cart'
     clearMsg()
   }
 }
@@ -61,7 +71,7 @@ const addToWishlist = async (product) => {
     success.value = `${product.name} added to wishlist!`
     clearMsg()
   } catch (err) {
-    error.value = err.response?.data?.message || 'Failed to add to wishlist'
+    error.value = err.response?.data?.message || 'Already in wishlist'
     clearMsg()
   }
 }
@@ -73,14 +83,12 @@ const deleteProduct = async (id) => {
     success.value = 'Product deleted'
     fetchProducts()
     clearMsg()
-  } catch (err) {
+  } catch {
     error.value = 'Failed to delete product'
   }
 }
 
-const clearMsg = () => {
-  setTimeout(() => { success.value = ''; error.value = '' }, 3000)
-}
+const clearMsg = () => setTimeout(() => { success.value = ''; error.value = '' }, 3000)
 
 onMounted(fetchProducts)
 </script>
@@ -90,31 +98,52 @@ onMounted(fetchProducts)
     <div class="page-header flex-between">
       <div>
         <h1>Products</h1>
-        <p>Browse and manage products</p>
+        <p>{{ filteredProducts.length }} products available</p>
       </div>
       <button class="btn btn-primary" @click="showAddModal = true">+ Add Product</button>
+    </div>
+
+    <div class="search-bar">
+      <span class="search-icon">&#128269;</span>
+      <input v-model="searchQuery" placeholder="Search products..." />
     </div>
 
     <div v-if="success" class="alert alert-success">{{ success }}</div>
     <div v-if="error" class="alert alert-error">{{ error }}</div>
 
-    <div v-if="loading" class="loading">Loading products...</div>
+    <div v-if="loading" class="loading">
+      <div class="spinner"></div>
+      <p>Loading products...</p>
+    </div>
 
-    <div v-else-if="products.length === 0" class="empty-state">
-      <h3>No products yet</h3>
-      <p>Click "Add Product" to create your first product.</p>
+    <div v-else-if="filteredProducts.length === 0" class="empty-state">
+      <div class="empty-icon">&#128717;</div>
+      <h3>No products found</h3>
+      <p v-if="searchQuery">Try a different search term</p>
+      <p v-else>Click "Add Product" to create your first product.</p>
     </div>
 
     <div v-else class="product-grid">
-      <div v-for="p in products" :key="p.id" class="product-card">
-        <h3>{{ p.name }}</h3>
-        <p class="text-sm text-light">{{ p.description }}</p>
-        <div class="price">${{ p.price?.toFixed(2) }}</div>
-        <div class="stock">Stock: {{ p.quantity }}</div>
-        <div class="actions">
-          <button v-if="user" class="btn btn-primary btn-sm" @click="addToBasket(p)">Add to Basket</button>
-          <button v-if="user" class="btn btn-outline btn-sm" @click="addToWishlist(p)">Wishlist</button>
-          <button class="btn btn-danger btn-sm" @click="deleteProduct(p.id)">Delete</button>
+      <div v-for="p in filteredProducts" :key="p.id" class="product-card">
+        <div class="product-image">
+          &#128717;
+          <button v-if="user" class="wishlist-btn" @click="addToWishlist(p)">&#9825;</button>
+        </div>
+        <div class="product-body">
+          <div class="product-name">{{ p.name }}</div>
+          <div class="product-desc">{{ p.description || 'No description available' }}</div>
+          <div class="product-footer">
+            <div class="product-price">${{ p.price?.toFixed(2) }}</div>
+            <div :class="['product-stock', p.quantity <= 5 ? 'low' : '']">
+              {{ p.quantity > 0 ? p.quantity + ' in stock' : 'Out of stock' }}
+            </div>
+          </div>
+        </div>
+        <div class="product-actions">
+          <button v-if="user" class="btn btn-accent btn-sm" style="flex:1" @click="addToBasket(p)">
+            Add to Cart
+          </button>
+          <button class="btn btn-outline btn-sm" @click="deleteProduct(p.id)">&#128465;</button>
         </div>
       </div>
     </div>
@@ -125,20 +154,20 @@ onMounted(fetchProducts)
         <h2>Add New Product</h2>
         <form @submit.prevent="addProduct">
           <div class="form-group">
-            <label>Name</label>
-            <input v-model="newProduct.name" required />
+            <label>Product Name</label>
+            <input v-model="newProduct.name" placeholder="e.g. Wireless Headphones" required />
           </div>
           <div class="form-group">
             <label>Description</label>
-            <textarea v-model="newProduct.description" rows="3"></textarea>
+            <textarea v-model="newProduct.description" rows="3" placeholder="Describe your product..."></textarea>
           </div>
           <div class="grid-2">
             <div class="form-group">
-              <label>Price</label>
+              <label>Price ($)</label>
               <input v-model.number="newProduct.price" type="number" step="0.01" min="0" required />
             </div>
             <div class="form-group">
-              <label>Quantity</label>
+              <label>Stock Quantity</label>
               <input v-model.number="newProduct.quantity" type="number" min="0" required />
             </div>
           </div>

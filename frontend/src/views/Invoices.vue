@@ -14,7 +14,7 @@ const fetchInvoices = async () => {
   try {
     const res = await invoiceApi.getByUser(user.value.id)
     invoices.value = res.data
-  } catch (err) {
+  } catch {
     error.value = 'Failed to load invoices'
   } finally {
     loading.value = false
@@ -28,36 +28,40 @@ onMounted(fetchInvoices)
   <div class="page">
     <div class="page-header">
       <h1>Invoices</h1>
-      <p>Your invoice history</p>
+      <p>Your billing history</p>
     </div>
 
-    <div v-if="!user" class="alert alert-info">Please login to view your invoices.</div>
+    <div v-if="!user" class="alert alert-info">Please sign in to view your invoices.</div>
     <div v-if="error" class="alert alert-error">{{ error }}</div>
 
-    <div v-if="loading && user" class="loading">Loading invoices...</div>
+    <div v-if="loading && user" class="loading">
+      <div class="spinner"></div>
+      <p>Loading invoices...</p>
+    </div>
 
     <template v-else-if="user">
       <div v-if="invoices.length === 0" class="empty-state">
+        <div class="empty-icon">&#128196;</div>
         <h3>No invoices yet</h3>
         <p>Invoices are generated automatically when you place an order.</p>
       </div>
 
-      <div class="card" v-else>
+      <div class="card" v-else style="padding: 0; overflow: hidden;">
         <table>
           <thead>
             <tr>
-              <th>Invoice ID</th>
+              <th>Invoice</th>
               <th>Order ID</th>
               <th>Amount</th>
-              <th>Created At</th>
+              <th>Date</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="inv in invoices" :key="inv.id">
               <td><strong>#{{ inv.id }}</strong></td>
-              <td>{{ inv.orderId }}</td>
-              <td style="color: var(--primary); font-weight: 600;">${{ (inv.totalAmount || 0).toFixed(2) }}</td>
-              <td class="text-light">{{ inv.createdAt }}</td>
+              <td class="text-secondary">{{ inv.orderId?.substring(0, 8) }}...</td>
+              <td style="color: var(--accent); font-weight: 700;">${{ (inv.totalAmount || 0).toFixed(2) }}</td>
+              <td class="text-muted">{{ inv.createdAt }}</td>
             </tr>
           </tbody>
         </table>
