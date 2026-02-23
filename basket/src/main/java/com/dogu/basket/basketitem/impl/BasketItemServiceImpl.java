@@ -6,6 +6,8 @@ import com.dogu.basket.basketitem.api.CheckoutResult;
 import com.dogu.basket.events.OrderCreatedEvent;
 import com.dogu.basket.events.OrderEventPublisher;
 import com.dogu.basket.events.OrderItemEvent;
+import com.dogu.basket.order.api.OrderService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
@@ -33,6 +35,11 @@ public class BasketItemServiceImpl implements BasketItemService {
 
     @Autowired
     OrderEventPublisher eventPublisher;
+
+    @Autowired
+    OrderService orderService;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final String STOCK_SERVICE_URL = "http://localhost:9093";
     private static final String AUTH_SERVICE_URL = "http://localhost:9092";
@@ -133,6 +140,25 @@ public class BasketItemServiceImpl implements BasketItemService {
         }
 
         String orderId = UUID.randomUUID().toString();
+
+        // Serialize items to JSON
+        String itemsJson;
+        try {
+            itemsJson = objectMapper.writeValueAsString(orderItems);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to serialize order items");
+        }
+
+        // Save order to database
+        orderService.createOrder(orderId, userId, itemsJson, totalAmount);
+
+        // Reduce stock for each item
+        for (BasketItem item : items) {
+            restTemplate.put(
+                    STOCK_SERVICE_URL + "/products/" + item.getProductId() + "/reduce-stock",
+                    Map.of("quantity", item.getQuantity())
+            );
+        }
 
         // Publish order created event
         eventPublisher.publishOrderCreated(

@@ -65,6 +65,27 @@ public class ProductServiceImpl implements ProductService {
         productRepository.delete(entity);
     }
 
+    @Override
+    @Caching(
+            put = {@CachePut(value = "products", key = "#id")},
+            evict = {@CacheEvict(value = "products-all", allEntries = true)}
+    )
+    public ProductDto reduceStock(int id, int quantity) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+        if (product.getQuantity() < quantity) {
+            throw new RuntimeException("Insufficient stock. Available: " + product.getQuantity());
+        }
+        product.setQuantity(product.getQuantity() - quantity);
+        return toDto(productRepository.save(product));
+    }
+
+    @Override
+    public List<ProductDto> getLowStock(int threshold) {
+        return productRepository.findByQuantityLessThanEqual(threshold)
+                .stream().map(this::toDto).toList();
+    }
+
     private Product toEntity(ProductDto request, Product entity) {
         if (entity == null) {
             entity = new Product();

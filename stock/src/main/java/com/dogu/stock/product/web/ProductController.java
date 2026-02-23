@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/products")
@@ -42,6 +43,13 @@ public class ProductController {
     @DeleteMapping("/{id}")
     public void delete(@PathVariable int id) {
         service.delete(id);
+    }
+
+    @PutMapping("/{id}/reduce-stock")
+    public ProductResponse reduceStock(@PathVariable int id, @RequestBody Map<String, Integer> body) {
+        int quantity = body.get("quantity");
+        ProductDto dto = service.reduceStock(id, quantity);
+        return toResponse(dto);
     }
 
     public ProductResponse toResponse(ProductDto dto) {

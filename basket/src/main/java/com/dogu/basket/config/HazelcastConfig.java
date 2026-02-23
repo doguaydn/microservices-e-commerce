@@ -26,6 +26,24 @@ public class HazelcastConfig {
         basketByUserConfig.setTimeToLiveSeconds(120);
         config.addMapConfig(basketByUserConfig);
 
+        // orders cache (10 dk TTL)
+        MapConfig ordersConfig = new MapConfig("orders");
+        ordersConfig.setTimeToLiveSeconds(600);
+        config.addMapConfig(ordersConfig);
+
+        MapConfig ordersByUserConfig = new MapConfig("orders-by-user");
+        ordersByUserConfig.setTimeToLiveSeconds(300);
+        config.addMapConfig(ordersByUserConfig);
+
+        MapConfig ordersAllConfig = new MapConfig("orders-all");
+        ordersAllConfig.setTimeToLiveSeconds(300);
+        config.addMapConfig(ordersAllConfig);
+
+        // wishlist cache (5 dk TTL)
+        MapConfig wishlistConfig = new MapConfig("wishlist-by-user");
+        wishlistConfig.setTimeToLiveSeconds(300);
+        config.addMapConfig(wishlistConfig);
+
         return config;
     }
 }

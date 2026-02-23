@@ -8,4 +8,6 @@ public interface ProductService {
     public List<ProductDto> getAll();
     public ProductDto update(ProductDto info);
     public void delete(int id);
+    public ProductDto reduceStock(int id, int quantity);
+    public List<ProductDto> getLowStock(int threshold);
 }
