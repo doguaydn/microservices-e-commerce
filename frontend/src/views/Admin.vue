@@ -212,10 +212,6 @@ onMounted(fetchAll)
             <div class="stat-label">Orders</div>
           </div>
           <div class="stat-card">
-            <div class="stat-value">${{ (orderStats.totalRevenue || 0).toFixed(2) }}</div>
-            <div class="stat-label">Revenue</div>
-          </div>
-          <div class="stat-card">
             <div class="stat-value">{{ invoiceStats.totalInvoices || 0 }}</div>
             <div class="stat-label">Invoices</div>
           </div>
@@ -237,6 +233,10 @@ onMounted(fetchAll)
                 <tr>
                   <td><span class="badge badge-confirmed">Confirmed</span></td>
                   <td><strong>{{ orderStats.confirmedOrders || 0 }}</strong></td>
+                </tr>
+                <tr>
+                  <td><span class="badge badge-shipped">Shipped</span></td>
+                  <td><strong>{{ orderStats.shippedOrders || 0 }}</strong></td>
                 </tr>
                 <tr>
                   <td><span class="badge badge-delivered">Delivered</span></td>

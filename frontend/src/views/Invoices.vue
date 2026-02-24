@@ -7,12 +7,15 @@ const loading = ref(true)
 const error = ref('')
 
 const user = computed(() => JSON.parse(localStorage.getItem('user') || 'null'))
+const isAdmin = computed(() => user.value?.role === 'ADMIN')
 
 const fetchInvoices = async () => {
   if (!user.value) return
   loading.value = true
   try {
-    const res = await invoiceApi.getByUser(user.value.id)
+    const res = isAdmin.value
+      ? await invoiceApi.getAll()
+      : await invoiceApi.getByUser(user.value.id)
     invoices.value = res.data
   } catch {
     error.value = 'Failed to load invoices'
@@ -28,7 +31,7 @@ onMounted(fetchInvoices)
   <div class="page">
     <div class="page-header">
       <h1>Invoices</h1>
-      <p>Your billing history</p>
+      <p>{{ isAdmin ? 'All invoices' : 'Your billing history' }}</p>
     </div>
 
     <div v-if="!user" class="alert alert-info">Please sign in to view your invoices.</div>
@@ -51,17 +54,19 @@ onMounted(fetchInvoices)
           <thead>
             <tr>
               <th>Invoice</th>
-              <th>Order ID</th>
+              <th v-if="isAdmin">User</th>
               <th>Amount</th>
+              <th>Status</th>
               <th>Date</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="inv in invoices" :key="inv.id">
-              <td><strong>#{{ inv.id }}</strong></td>
-              <td class="text-secondary">{{ inv.orderId?.substring(0, 8) }}...</td>
+              <td><strong>{{ inv.invoiceSlug || '#' + inv.id }}</strong></td>
+              <td v-if="isAdmin">User #{{ inv.userId }}</td>
               <td style="color: var(--accent); font-weight: 700;">${{ (inv.totalAmount || 0).toFixed(2) }}</td>
-              <td class="text-muted">{{ inv.createdAt }}</td>
+              <td><span class="badge badge-created">{{ inv.status || 'CREATED' }}</span></td>
+              <td class="text-muted">{{ inv.createdAt ? new Date(inv.createdAt).toLocaleDateString() : '-' }}</td>
             </tr>
           </tbody>
         </table>

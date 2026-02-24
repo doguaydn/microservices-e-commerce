@@ -25,6 +25,7 @@ public class AdminController {
         stats.put("totalOrders", allOrders.size());
         stats.put("pendingOrders", orderService.countByStatus("PENDING"));
         stats.put("confirmedOrders", orderService.countByStatus("CONFIRMED"));
+        stats.put("shippedOrders", orderService.countByStatus("SHIPPED"));
         stats.put("deliveredOrders", orderService.countByStatus("DELIVERED"));
         stats.put("cancelledOrders", orderService.countByStatus("CANCELLED"));
         stats.put("totalRevenue", totalRevenue);
