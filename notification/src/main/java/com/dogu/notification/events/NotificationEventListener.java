@@ -2,6 +2,8 @@ package com.dogu.notification.events;
 
 import com.dogu.notification.config.RabbitMQConfig;
 import com.dogu.notification.service.EmailService;
+import com.dogu.notification.service.EmailTemplateService;
+import com.dogu.notification.service.EmailTemplateService.OrderItem;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -9,6 +11,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class NotificationEventListener {
@@ -19,17 +24,17 @@ public class NotificationEventListener {
     private EmailService emailService;
 
     @Autowired
+    private EmailTemplateService templateService;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_USER_QUEUE)
     public void handleUserRegistered(UserRegisteredEvent event) {
         logger.info("NOTIFICATION: New User Registered! userId={}, email={}", event.getUserId(), event.getEmail());
 
-        String body = String.format(
-                "Welcome %s!\n\nYour account has been created successfully.\n\nThank you for joining us!",
-                event.getName()
-        );
-        emailService.sendEmail(event.getEmail(), "Welcome to E-Commerce!", body);
+        String html = templateService.buildWelcomeEmail(event.getName());
+        emailService.sendHtmlEmail(event.getEmail(), "Welcome to NovaMart!", html);
     }
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_ORDER_QUEUE)
@@ -41,22 +46,15 @@ public class NotificationEventListener {
             return;
         }
 
-        StringBuilder body = new StringBuilder();
-        body.append("Your order has been placed successfully!\n\n");
-        body.append("Order ID: ").append(event.getOrderId()).append("\n");
-        body.append("Total Amount: $").append(String.format("%.2f", event.getTotalAmount())).append("\n\n");
-
+        List<OrderItem> items = new ArrayList<>();
         if (event.getItems() != null) {
-            body.append("Items:\n");
             for (OrderItemEvent item : event.getItems()) {
-                body.append("- ").append(item.getProductName())
-                        .append(" x").append(item.getQuantity())
-                        .append(" ($").append(String.format("%.2f", item.getPrice())).append(")\n");
+                items.add(new OrderItem(item.getProductName(), item.getQuantity(), item.getPrice()));
             }
         }
 
-        body.append("\nThank you for your purchase!");
-        emailService.sendEmail(event.getEmail(), "Order Confirmation - " + event.getOrderId(), body.toString());
+        String html = templateService.buildOrderEmail(event.getOrderId(), items, event.getTotalAmount());
+        emailService.sendHtmlEmail(event.getEmail(), "Order Confirmed - NovaMart", html);
     }
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_INVOICE_QUEUE)
@@ -68,33 +66,24 @@ public class NotificationEventListener {
             return;
         }
 
-        StringBuilder body = new StringBuilder();
-        body.append("Your invoice has been generated.\n\n");
-        body.append("Invoice: ").append(event.getInvoiceSlug()).append("\n");
-        body.append("Total Amount: $").append(String.format("%.2f", event.getTotalAmount())).append("\n\n");
-
-        // Parse items JSON and list products
+        List<OrderItem> items = new ArrayList<>();
         if (event.getItems() != null) {
             try {
-                JsonNode items = objectMapper.readTree(event.getItems());
-                if (items.isArray()) {
-                    body.append("Items:\n");
-                    for (JsonNode item : items) {
+                JsonNode itemsNode = objectMapper.readTree(event.getItems());
+                if (itemsNode.isArray()) {
+                    for (JsonNode item : itemsNode) {
                         String productName = item.has("productName") ? item.get("productName").asText() : "Unknown";
                         int quantity = item.has("quantity") ? item.get("quantity").asInt() : 1;
                         double price = item.has("price") ? item.get("price").asDouble() : 0.0;
-                        body.append("- ").append(productName)
-                                .append(" x").append(quantity)
-                                .append(" ($").append(String.format("%.2f", price)).append(")\n");
+                        items.add(new OrderItem(productName, quantity, price));
                     }
-                    body.append("\n");
                 }
             } catch (Exception e) {
                 logger.warn("Could not parse items JSON: {}", e.getMessage());
             }
         }
 
-        body.append("Thank you for your purchase!");
-        emailService.sendEmail(event.getEmail(), "Invoice " + event.getInvoiceSlug() + " - NovaMart", body.toString());
+        String html = templateService.buildInvoiceEmail(event.getInvoiceSlug(), items, event.getTotalAmount());
+        emailService.sendHtmlEmail(event.getEmail(), "Invoice " + event.getInvoiceSlug() + " - NovaMart", html);
     }
 }
