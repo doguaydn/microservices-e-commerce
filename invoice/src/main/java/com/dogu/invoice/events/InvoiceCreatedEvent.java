@@ -8,17 +8,21 @@ public class InvoiceCreatedEvent {
     private int userId;
     private String email;
     private double totalAmount;
+    private String items;
+    private String invoiceSlug;
     private LocalDateTime timestamp;
 
     public InvoiceCreatedEvent() {
     }
 
-    public InvoiceCreatedEvent(int invoiceId, String orderId, int userId, String email, double totalAmount) {
+    public InvoiceCreatedEvent(int invoiceId, String orderId, int userId, String email, double totalAmount, String items, String invoiceSlug) {
         this.invoiceId = invoiceId;
         this.orderId = orderId;
         this.userId = userId;
         this.email = email;
         this.totalAmount = totalAmount;
+        this.items = items;
+        this.invoiceSlug = invoiceSlug;
         this.timestamp = LocalDateTime.now();
     }
 
@@ -68,5 +72,21 @@ public class InvoiceCreatedEvent {
 
     public void setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public String getItems() {
+        return items;
+    }
+
+    public void setItems(String items) {
+        this.items = items;
+    }
+
+    public String getInvoiceSlug() {
+        return invoiceSlug;
+    }
+
+    public void setInvoiceSlug(String invoiceSlug) {
+        this.invoiceSlug = invoiceSlug;
     }
 }

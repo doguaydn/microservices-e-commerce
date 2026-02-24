@@ -45,7 +45,9 @@ public class OrderEventListener {
                             invoice.getOrderId(),
                             invoice.getUserId(),
                             event.getEmail(),
-                            invoice.getTotalAmount()
+                            invoice.getTotalAmount(),
+                            itemsJson,
+                            invoice.getInvoiceSlug()
                     )
             );
 

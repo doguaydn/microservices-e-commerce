@@ -2,6 +2,8 @@ package com.dogu.notification.events;
 
 import com.dogu.notification.config.RabbitMQConfig;
 import com.dogu.notification.service.EmailService;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -15,6 +17,9 @@ public class NotificationEventListener {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_USER_QUEUE)
     public void handleUserRegistered(UserRegisteredEvent event) {
@@ -56,19 +61,40 @@ public class NotificationEventListener {
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_INVOICE_QUEUE)
     public void handleInvoiceCreated(InvoiceCreatedEvent event) {
-        logger.info("NOTIFICATION: Invoice Created! invoiceId={}, orderId={}, email={}", event.getInvoiceId(), event.getOrderId(), event.getEmail());
+        logger.info("NOTIFICATION: Invoice Created! invoiceSlug={}, email={}", event.getInvoiceSlug(), event.getEmail());
 
         if (event.getEmail() == null) {
             logger.warn("No email found for userId={}, skipping email", event.getUserId());
             return;
         }
 
-        String body = String.format(
-                "Your invoice has been generated.\n\nInvoice ID: %d\nOrder ID: %s\nTotal Amount: $%.2f\n\nThank you for your purchase!",
-                event.getInvoiceId(),
-                event.getOrderId(),
-                event.getTotalAmount()
-        );
-        emailService.sendEmail(event.getEmail(), "Invoice #" + event.getInvoiceId() + " - E-Commerce", body);
+        StringBuilder body = new StringBuilder();
+        body.append("Your invoice has been generated.\n\n");
+        body.append("Invoice: ").append(event.getInvoiceSlug()).append("\n");
+        body.append("Total Amount: $").append(String.format("%.2f", event.getTotalAmount())).append("\n\n");
+
+        // Parse items JSON and list products
+        if (event.getItems() != null) {
+            try {
+                JsonNode items = objectMapper.readTree(event.getItems());
+                if (items.isArray()) {
+                    body.append("Items:\n");
+                    for (JsonNode item : items) {
+                        String productName = item.has("productName") ? item.get("productName").asText() : "Unknown";
+                        int quantity = item.has("quantity") ? item.get("quantity").asInt() : 1;
+                        double price = item.has("price") ? item.get("price").asDouble() : 0.0;
+                        body.append("- ").append(productName)
+                                .append(" x").append(quantity)
+                                .append(" ($").append(String.format("%.2f", price)).append(")\n");
+                    }
+                    body.append("\n");
+                }
+            } catch (Exception e) {
+                logger.warn("Could not parse items JSON: {}", e.getMessage());
+            }
+        }
+
+        body.append("Thank you for your purchase!");
+        emailService.sendEmail(event.getEmail(), "Invoice " + event.getInvoiceSlug() + " - NovaMart", body.toString());
     }
 }

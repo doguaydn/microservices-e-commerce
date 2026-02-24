@@ -45,6 +45,7 @@ public class InvoiceController {
         response.totalAmount = dto.getTotalAmount();
         response.status = dto.getStatus();
         response.createdAt = dto.getCreatedAt();
+        response.invoiceSlug = dto.getInvoiceSlug();
         return response;
     }
 }

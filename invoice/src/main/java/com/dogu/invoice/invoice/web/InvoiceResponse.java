@@ -10,4 +10,5 @@ public class InvoiceResponse {
     public double totalAmount;
     public String status;
     public LocalDateTime createdAt;
+    public String invoiceSlug;
 }

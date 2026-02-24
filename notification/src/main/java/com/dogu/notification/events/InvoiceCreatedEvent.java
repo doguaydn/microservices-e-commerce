@@ -8,6 +8,8 @@ public class InvoiceCreatedEvent {
     private int userId;
     private String email;
     private double totalAmount;
+    private String items;
+    private String invoiceSlug;
     private LocalDateTime timestamp;
 
     public InvoiceCreatedEvent() {
@@ -59,5 +61,21 @@ public class InvoiceCreatedEvent {
 
     public void setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public String getItems() {
+        return items;
+    }
+
+    public void setItems(String items) {
+        this.items = items;
+    }
+
+    public String getInvoiceSlug() {
+        return invoiceSlug;
+    }
+
+    public void setInvoiceSlug(String invoiceSlug) {
+        this.invoiceSlug = invoiceSlug;
     }
 }

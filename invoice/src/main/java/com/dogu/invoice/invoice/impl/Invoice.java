@@ -21,6 +21,9 @@ public class Invoice {
     private String status;
     private LocalDateTime createdAt;
 
+    @Column(unique = true)
+    private String invoiceSlug;
+
     public Invoice() {
         this.createdAt = LocalDateTime.now();
         this.status = "CREATED";
@@ -80,5 +83,13 @@ public class Invoice {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getInvoiceSlug() {
+        return invoiceSlug;
+    }
+
+    public void setInvoiceSlug(String invoiceSlug) {
+        this.invoiceSlug = invoiceSlug;
     }
 }

@@ -30,6 +30,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         invoice.setTotalAmount(totalAmount);
         invoice.setStatus("CREATED");
         invoice.setCreatedAt(LocalDateTime.now());
+        invoice.setInvoiceSlug("INV-" + System.currentTimeMillis() + "-" + (int)(Math.random() * 1000));
 
         invoiceRepository.save(invoice);
         return toDto(invoice);
@@ -74,6 +75,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         dto.setTotalAmount(entity.getTotalAmount());
         dto.setStatus(entity.getStatus());
         dto.setCreatedAt(entity.getCreatedAt());
+        dto.setInvoiceSlug(entity.getInvoiceSlug());
         return dto;
     }
 }

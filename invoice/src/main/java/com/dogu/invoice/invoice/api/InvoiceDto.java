@@ -10,6 +10,7 @@ public class InvoiceDto implements java.io.Serializable {
     private double totalAmount;
     private String status;
     private LocalDateTime createdAt;
+    private String invoiceSlug;
 
     public int getId() {
         return id;
@@ -65,5 +66,13 @@ public class InvoiceDto implements java.io.Serializable {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getInvoiceSlug() {
+        return invoiceSlug;
+    }
+
+    public void setInvoiceSlug(String invoiceSlug) {
+        this.invoiceSlug = invoiceSlug;
     }
 }

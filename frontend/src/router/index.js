@@ -9,7 +9,8 @@ const routes = [
   { path: '/orders', name: 'Orders', component: () => import('../views/Orders.vue') },
   { path: '/wishlist', name: 'Wishlist', component: () => import('../views/Wishlist.vue') },
   { path: '/invoices', name: 'Invoices', component: () => import('../views/Invoices.vue') },
-  { path: '/admin', name: 'Admin', component: () => import('../views/Admin.vue'), meta: { requiresAdmin: true } },
+  { path: '/admin', name: 'AdminLogin', component: () => import('../views/AdminLogin.vue') },
+  { path: '/admin/dashboard', name: 'Admin', component: () => import('../views/Admin.vue'), meta: { requiresAdmin: true } },
 ]
 
 const router = createRouter({

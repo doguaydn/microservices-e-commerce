@@ -60,7 +60,7 @@ watch(() => route.path, fetchCartCount)
         <li><router-link to="/orders">My Orders</router-link></li>
         <li><router-link to="/wishlist">Wishlist</router-link></li>
         <li><router-link to="/invoices">Invoices</router-link></li>
-        <li v-if="isAdmin"><router-link to="/admin">Admin</router-link></li>
+        <li v-if="isAdmin"><router-link to="/admin/dashboard">Admin</router-link></li>
       </template>
     </ul>
 
