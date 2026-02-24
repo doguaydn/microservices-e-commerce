@@ -56,7 +56,7 @@ public class UserController {
     public LoginResponse login(@RequestBody UserLoginRequest request) {
         UserDto userDto = userServiceImpl.login(request.getEmail(), request.getPassword());
         String token = jwtService.generateToken(userDto.getId(), userDto.getEmail(), userDto.getName());
-        return new LoginResponse(token, userDto.getEmail(), userDto.getName(), userDto.getSurname());
+        return new LoginResponse(userDto.getId(), token, userDto.getEmail(), userDto.getName(), userDto.getSurname());
     }
 
     @PostMapping("/forgot-password")

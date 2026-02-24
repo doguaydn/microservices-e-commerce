@@ -2,6 +2,7 @@ package com.dogu.auth.user.web;
 
 public class LoginResponse {
 
+    private int id;
     private String token;
     private String email;
     private String name;
@@ -10,11 +11,20 @@ public class LoginResponse {
     public LoginResponse() {
     }
 
-    public LoginResponse(String token, String email, String name, String surname) {
+    public LoginResponse(int id, String token, String email, String name, String surname) {
+        this.id = id;
         this.token = token;
         this.email = email;
         this.name = name;
         this.surname = surname;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getToken() {

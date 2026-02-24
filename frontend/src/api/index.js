@@ -3,6 +3,19 @@ import axios from 'axios'
 const api = axios.create({
   baseURL: '/api',
   headers: { 'Content-Type': 'application/json' },
+  timeout: 10000,
+})
+
+// Retry on connection refused
+api.interceptors.response.use(null, async (error) => {
+  const config = error.config
+  if (!config._retryCount) config._retryCount = 0
+  if (config._retryCount < 2 && (!error.response || error.code === 'ECONNREFUSED' || error.code === 'ERR_NETWORK')) {
+    config._retryCount++
+    await new Promise(r => setTimeout(r, 1000))
+    return api(config)
+  }
+  return Promise.reject(error)
 })
 
 // Auth

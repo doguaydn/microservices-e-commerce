@@ -41,8 +41,8 @@ public class BasketItemServiceImpl implements BasketItemService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private static final String STOCK_SERVICE_URL = "http://localhost:9093";
-    private static final String AUTH_SERVICE_URL = "http://localhost:9092";
+    private static final String STOCK_SERVICE_URL = "http://127.0.0.1:9093";
+    private static final String AUTH_SERVICE_URL = "http://127.0.0.1:9092";
 
     @Override
     @Caching(evict = {
