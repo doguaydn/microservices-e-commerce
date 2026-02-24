@@ -3,24 +3,26 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 import * as THREE from 'three'
 
 const props = defineProps({
-  particleCount: { type: Number, default: 120 },
-  color1: { type: String, default: '#667eea' },
-  color2: { type: String, default: '#764ba2' },
-  speed: { type: Number, default: 0.3 }
+  mode: { type: String, default: 'galaxy' }, // 'galaxy' | 'subtle'
+  particleCount: { type: Number, default: 3000 },
+  speed: { type: Number, default: 0.15 }
 })
 
 const canvasRef = ref(null)
-let scene, camera, renderer, particles, geometryShapes
-let mouseX = 0, mouseY = 0
+let scene, camera, renderer, galaxyPoints, nebulaPoints, centralMesh, auroras
+let mouseX = 0, mouseY = 0, targetMouseX = 0, targetMouseY = 0
 let animationId = null
+let clock
 
 const init = () => {
   const container = canvasRef.value
   if (!container) return
 
+  clock = new THREE.Clock()
   scene = new THREE.Scene()
-  camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000)
-  camera.position.z = 30
+
+  camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 2000)
+  camera.position.z = props.mode === 'subtle' ? 50 : 35
 
   renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
   renderer.setSize(container.clientWidth, container.clientHeight)
@@ -28,155 +30,269 @@ const init = () => {
   renderer.setClearColor(0x000000, 0)
   container.appendChild(renderer.domElement)
 
-  // Floating particles
-  const particleGeometry = new THREE.BufferGeometry()
-  const positions = new Float32Array(props.particleCount * 3)
-  const velocities = new Float32Array(props.particleCount * 3)
-
-  for (let i = 0; i < props.particleCount; i++) {
-    positions[i * 3] = (Math.random() - 0.5) * 60
-    positions[i * 3 + 1] = (Math.random() - 0.5) * 40
-    positions[i * 3 + 2] = (Math.random() - 0.5) * 30
-    velocities[i * 3] = (Math.random() - 0.5) * 0.02
-    velocities[i * 3 + 1] = (Math.random() - 0.5) * 0.02
-    velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.02
+  if (props.mode === 'galaxy') {
+    createGalaxy()
+    createNebula()
+    createCentralGeometry()
+    createAuroraRibbons()
+  } else {
+    createSubtleParticles()
   }
-
-  particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-  const particleMaterial = new THREE.PointsMaterial({
-    size: 0.15,
-    color: new THREE.Color(props.color1),
-    transparent: true,
-    opacity: 0.6,
-    blending: THREE.AdditiveBlending
-  })
-  particles = new THREE.Points(particleGeometry, particleMaterial)
-  particles.userData.velocities = velocities
-  scene.add(particles)
-
-  // Floating geometric shapes
-  geometryShapes = new THREE.Group()
-
-  const shapes = [
-    new THREE.IcosahedronGeometry(1.2, 0),
-    new THREE.OctahedronGeometry(1, 0),
-    new THREE.TetrahedronGeometry(0.9, 0),
-    new THREE.TorusGeometry(0.8, 0.3, 8, 16),
-    new THREE.DodecahedronGeometry(0.7, 0),
-  ]
-
-  for (let i = 0; i < 8; i++) {
-    const geo = shapes[i % shapes.length]
-    const mat = new THREE.MeshBasicMaterial({
-      color: new THREE.Color(i % 2 === 0 ? props.color1 : props.color2),
-      wireframe: true,
-      transparent: true,
-      opacity: 0.15
-    })
-    const mesh = new THREE.Mesh(geo, mat)
-    mesh.position.set(
-      (Math.random() - 0.5) * 50,
-      (Math.random() - 0.5) * 30,
-      (Math.random() - 0.5) * 20 - 5
-    )
-    mesh.userData.rotSpeed = {
-      x: (Math.random() - 0.5) * 0.01,
-      y: (Math.random() - 0.5) * 0.01
-    }
-    mesh.userData.floatSpeed = Math.random() * 0.005 + 0.002
-    mesh.userData.floatOffset = Math.random() * Math.PI * 2
-    geometryShapes.add(mesh)
-  }
-  scene.add(geometryShapes)
-
-  // Connection lines between close particles
-  const lineMaterial = new THREE.LineBasicMaterial({
-    color: new THREE.Color(props.color1),
-    transparent: true,
-    opacity: 0.08
-  })
-  const lineGeometry = new THREE.BufferGeometry()
-  const linePositions = new Float32Array(props.particleCount * props.particleCount * 6)
-  lineGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3))
-  const lines = new THREE.LineSegments(lineGeometry, lineMaterial)
-  lines.userData.isLines = true
-  scene.add(lines)
 }
 
+// ===== GALAXY SPIRAL =====
+const createGalaxy = () => {
+  const count = props.particleCount
+  const geometry = new THREE.BufferGeometry()
+  const positions = new Float32Array(count * 3)
+  const colors = new Float32Array(count * 3)
+  const sizes = new Float32Array(count)
+
+  const colorInside = new THREE.Color('#ff6030')
+  const colorMid = new THREE.Color('#667eea')
+  const colorOutside = new THREE.Color('#00f0ff')
+
+  const branches = 5
+  const spin = 2.5
+  const radius = 20
+
+  for (let i = 0; i < count; i++) {
+    const i3 = i * 3
+    const r = Math.random() * radius
+    const branchAngle = ((i % branches) / branches) * Math.PI * 2
+    const spinAngle = r * spin
+
+    const randomX = Math.pow(Math.random(), 3) * (Math.random() < 0.5 ? 1 : -1) * r * 0.15
+    const randomY = Math.pow(Math.random(), 3) * (Math.random() < 0.5 ? 1 : -1) * r * 0.08
+    const randomZ = Math.pow(Math.random(), 3) * (Math.random() < 0.5 ? 1 : -1) * r * 0.15
+
+    positions[i3] = Math.cos(branchAngle + spinAngle) * r + randomX
+    positions[i3 + 1] = randomY
+    positions[i3 + 2] = Math.sin(branchAngle + spinAngle) * r + randomZ
+
+    const mixedColor = colorInside.clone()
+    const t = r / radius
+    if (t < 0.5) {
+      mixedColor.lerp(colorMid, t * 2)
+    } else {
+      mixedColor.copy(colorMid).lerp(colorOutside, (t - 0.5) * 2)
+    }
+
+    colors[i3] = mixedColor.r
+    colors[i3 + 1] = mixedColor.g
+    colors[i3 + 2] = mixedColor.b
+
+    sizes[i] = Math.random() * 2 + 0.5
+  }
+
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+  geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1))
+
+  const material = new THREE.PointsMaterial({
+    size: 0.12,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.85,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    sizeAttenuation: true,
+  })
+
+  galaxyPoints = new THREE.Points(geometry, material)
+  galaxyPoints.rotation.x = -0.4
+  scene.add(galaxyPoints)
+}
+
+// ===== NEBULA CLOUD =====
+const createNebula = () => {
+  const count = 800
+  const geometry = new THREE.BufferGeometry()
+  const positions = new Float32Array(count * 3)
+  const colors = new Float32Array(count * 3)
+
+  const nebulaColors = [
+    new THREE.Color('#764ba2'),
+    new THREE.Color('#667eea'),
+    new THREE.Color('#00c9ff'),
+    new THREE.Color('#ff6b6b'),
+  ]
+
+  for (let i = 0; i < count; i++) {
+    const i3 = i * 3
+    const theta = Math.random() * Math.PI * 2
+    const phi = Math.acos(2 * Math.random() - 1)
+    const r = 8 + Math.random() * 18
+
+    positions[i3] = r * Math.sin(phi) * Math.cos(theta)
+    positions[i3 + 1] = (Math.random() - 0.5) * 12
+    positions[i3 + 2] = r * Math.sin(phi) * Math.sin(theta)
+
+    const c = nebulaColors[Math.floor(Math.random() * nebulaColors.length)]
+    colors[i3] = c.r
+    colors[i3 + 1] = c.g
+    colors[i3 + 2] = c.b
+  }
+
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+
+  const material = new THREE.PointsMaterial({
+    size: 0.35,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.3,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  })
+
+  nebulaPoints = new THREE.Points(geometry, material)
+  scene.add(nebulaPoints)
+}
+
+// ===== CENTRAL GLOWING GEOMETRY =====
+const createCentralGeometry = () => {
+  const geometry = new THREE.TorusKnotGeometry(2.5, 0.6, 128, 32, 2, 3)
+  const material = new THREE.MeshBasicMaterial({
+    color: '#667eea',
+    wireframe: true,
+    transparent: true,
+    opacity: 0.12,
+  })
+  centralMesh = new THREE.Mesh(geometry, material)
+  scene.add(centralMesh)
+
+  // Inner glow sphere
+  const glowGeo = new THREE.SphereGeometry(1.8, 32, 32)
+  const glowMat = new THREE.MeshBasicMaterial({
+    color: '#764ba2',
+    transparent: true,
+    opacity: 0.06,
+  })
+  const glow = new THREE.Mesh(glowGeo, glowMat)
+  scene.add(glow)
+}
+
+// ===== AURORA RIBBONS =====
+const createAuroraRibbons = () => {
+  auroras = new THREE.Group()
+
+  for (let r = 0; r < 3; r++) {
+    const points = []
+    const segments = 80
+    for (let i = 0; i <= segments; i++) {
+      const t = (i / segments) * Math.PI * 2
+      const x = Math.cos(t) * (12 + r * 3)
+      const y = Math.sin(t * 3 + r * 1.5) * 2.5
+      const z = Math.sin(t) * (12 + r * 3)
+      points.push(new THREE.Vector3(x, y, z))
+    }
+
+    const curve = new THREE.CatmullRomCurve3(points, true)
+    const tubeGeometry = new THREE.TubeGeometry(curve, 100, 0.08, 8, true)
+    const colors = ['#00f0ff', '#667eea', '#ff6b6b']
+    const material = new THREE.MeshBasicMaterial({
+      color: colors[r],
+      transparent: true,
+      opacity: 0.08,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+    })
+    const tube = new THREE.Mesh(tubeGeometry, material)
+    tube.userData.baseY = 0
+    tube.userData.speed = 0.3 + r * 0.15
+    tube.userData.offset = r * Math.PI * 0.66
+    auroras.add(tube)
+  }
+
+  scene.add(auroras)
+}
+
+// ===== SUBTLE MODE (for global background) =====
+const createSubtleParticles = () => {
+  const count = 400
+  const geometry = new THREE.BufferGeometry()
+  const positions = new Float32Array(count * 3)
+  const colors = new Float32Array(count * 3)
+
+  const c1 = new THREE.Color('#667eea')
+  const c2 = new THREE.Color('#764ba2')
+  const c3 = new THREE.Color('#00c9ff')
+  const palette = [c1, c2, c3]
+
+  for (let i = 0; i < count; i++) {
+    const i3 = i * 3
+    positions[i3] = (Math.random() - 0.5) * 100
+    positions[i3 + 1] = (Math.random() - 0.5) * 60
+    positions[i3 + 2] = (Math.random() - 0.5) * 40 - 10
+
+    const c = palette[Math.floor(Math.random() * palette.length)]
+    colors[i3] = c.r
+    colors[i3 + 1] = c.g
+    colors[i3 + 2] = c.b
+  }
+
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+
+  const material = new THREE.PointsMaterial({
+    size: 0.08,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.4,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  })
+
+  galaxyPoints = new THREE.Points(geometry, material)
+  scene.add(galaxyPoints)
+}
+
+// ===== ANIMATION LOOP =====
 const animate = () => {
   animationId = requestAnimationFrame(animate)
+  const elapsed = clock.getElapsedTime()
 
-  const time = Date.now() * 0.001
+  // Smooth mouse
+  mouseX += (targetMouseX - mouseX) * 0.05
+  mouseY += (targetMouseY - mouseY) * 0.05
 
-  // Animate particles
-  if (particles) {
-    const positions = particles.geometry.attributes.position.array
-    const velocities = particles.userData.velocities
-
-    for (let i = 0; i < props.particleCount; i++) {
-      positions[i * 3] += velocities[i * 3] * props.speed
-      positions[i * 3 + 1] += velocities[i * 3 + 1] * props.speed
-      positions[i * 3 + 2] += velocities[i * 3 + 2] * props.speed
-
-      // Wrap around
-      if (Math.abs(positions[i * 3]) > 30) velocities[i * 3] *= -1
-      if (Math.abs(positions[i * 3 + 1]) > 20) velocities[i * 3 + 1] *= -1
-      if (Math.abs(positions[i * 3 + 2]) > 15) velocities[i * 3 + 2] *= -1
+  if (galaxyPoints) {
+    galaxyPoints.rotation.y = elapsed * props.speed * 0.1
+    if (props.mode === 'galaxy') {
+      galaxyPoints.rotation.y += mouseX * 0.00005
+      galaxyPoints.rotation.x = -0.4 + mouseY * 0.00003
+    } else {
+      galaxyPoints.rotation.y += mouseX * 0.00002
+      galaxyPoints.rotation.x += mouseY * 0.00001
     }
-    particles.geometry.attributes.position.needsUpdate = true
-
-    // Mouse interaction
-    particles.rotation.x += (mouseY * 0.0001 - particles.rotation.x) * 0.05
-    particles.rotation.y += (mouseX * 0.0001 - particles.rotation.y) * 0.05
   }
 
-  // Animate shapes
-  if (geometryShapes) {
-    geometryShapes.children.forEach((mesh) => {
-      mesh.rotation.x += mesh.userData.rotSpeed.x
-      mesh.rotation.y += mesh.userData.rotSpeed.y
-      mesh.position.y += Math.sin(time * mesh.userData.floatSpeed * 100 + mesh.userData.floatOffset) * 0.01
+  if (nebulaPoints) {
+    nebulaPoints.rotation.y = elapsed * 0.02
+    nebulaPoints.rotation.x = Math.sin(elapsed * 0.05) * 0.1
+  }
+
+  if (centralMesh) {
+    centralMesh.rotation.x = elapsed * 0.15
+    centralMesh.rotation.y = elapsed * 0.2
+    const pulse = 1 + Math.sin(elapsed * 0.8) * 0.05
+    centralMesh.scale.set(pulse, pulse, pulse)
+  }
+
+  if (auroras) {
+    auroras.children.forEach((tube) => {
+      tube.rotation.y = elapsed * tube.userData.speed * 0.1
+      tube.position.y = Math.sin(elapsed * tube.userData.speed + tube.userData.offset) * 1.5
     })
-  }
-
-  // Update connection lines
-  const lines = scene.children.find(c => c.userData?.isLines)
-  if (lines && particles) {
-    const pPos = particles.geometry.attributes.position.array
-    const lPos = lines.geometry.attributes.position.array
-    let lineIdx = 0
-    const maxDist = 8
-
-    for (let i = 0; i < Math.min(props.particleCount, 50); i++) {
-      for (let j = i + 1; j < Math.min(props.particleCount, 50); j++) {
-        const dx = pPos[i * 3] - pPos[j * 3]
-        const dy = pPos[i * 3 + 1] - pPos[j * 3 + 1]
-        const dz = pPos[i * 3 + 2] - pPos[j * 3 + 2]
-        const dist = Math.sqrt(dx * dx + dy * dy + dz * dz)
-
-        if (dist < maxDist && lineIdx < lPos.length - 6) {
-          lPos[lineIdx++] = pPos[i * 3]
-          lPos[lineIdx++] = pPos[i * 3 + 1]
-          lPos[lineIdx++] = pPos[i * 3 + 2]
-          lPos[lineIdx++] = pPos[j * 3]
-          lPos[lineIdx++] = pPos[j * 3 + 1]
-          lPos[lineIdx++] = pPos[j * 3 + 2]
-        }
-      }
-    }
-
-    // Clear remaining
-    for (let i = lineIdx; i < lPos.length; i++) lPos[i] = 0
-    lines.geometry.attributes.position.needsUpdate = true
-    lines.geometry.setDrawRange(0, lineIdx / 3)
   }
 
   renderer.render(scene, camera)
 }
 
 const onMouseMove = (e) => {
-  mouseX = e.clientX - window.innerWidth / 2
-  mouseY = e.clientY - window.innerHeight / 2
+  targetMouseX = e.clientX - window.innerWidth / 2
+  targetMouseY = e.clientY - window.innerHeight / 2
 }
 
 const onResize = () => {

@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { basketApi } from './api'
+import ThreeBackground from './components/ThreeBackground.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -48,6 +49,10 @@ watch(() => route.path, fetchCartCount)
 </script>
 
 <template>
+  <div class="global-bg">
+    <ThreeBackground mode="subtle" />
+  </div>
+
   <nav class="navbar">
     <router-link to="/" class="navbar-brand">
       <div class="logo-icon">N</div>

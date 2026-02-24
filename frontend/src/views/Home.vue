@@ -44,13 +44,30 @@ onMounted(fetchFeatured)
   <div>
     <!-- Hero Section -->
     <section class="hero">
-      <ThreeBackground />
+      <ThreeBackground mode="galaxy" :particle-count="4000" />
       <div class="hero-content">
+        <div class="hero-badge">New Collection 2025</div>
         <h1>Discover Your <span class="gradient-text">Style</span></h1>
-        <p>Premium products curated for you. Shop the latest trends with confidence and fast delivery.</p>
+        <p>Premium products curated just for you. Experience the future of online shopping with fast delivery and secure payments.</p>
         <div class="hero-actions">
           <router-link to="/products" class="btn btn-accent btn-lg">Shop Now</router-link>
-          <router-link v-if="!isLoggedIn" to="/register" class="btn btn-outline btn-lg" style="border-color: rgba(255,255,255,0.3); color: #fff;">Create Account</router-link>
+          <router-link v-if="!isLoggedIn" to="/register" class="btn btn-outline btn-lg" style="border-color: rgba(255,255,255,0.2); color: #fff;">Create Account</router-link>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <span class="hero-stat-value">500+</span>
+            <span class="hero-stat-label">Products</span>
+          </div>
+          <div class="hero-stat-divider"></div>
+          <div class="hero-stat">
+            <span class="hero-stat-value">10K+</span>
+            <span class="hero-stat-label">Happy Customers</span>
+          </div>
+          <div class="hero-stat-divider"></div>
+          <div class="hero-stat">
+            <span class="hero-stat-value">24/7</span>
+            <span class="hero-stat-label">Support</span>
+          </div>
         </div>
       </div>
     </section>
@@ -110,3 +127,55 @@ onMounted(fetchFeatured)
     </section>
   </div>
 </template>
+
+<style scoped>
+.hero-badge {
+  display: inline-block;
+  padding: 0.4rem 1.25rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #00f0ff;
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  background: rgba(0, 240, 255, 0.06);
+  margin-bottom: 1.5rem;
+  text-transform: uppercase;
+}
+
+.hero-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.hero-stat { text-align: center; }
+
+.hero-stat-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.hero-stat-label {
+  font-size: 0.8rem;
+  color: #5a6380;
+  font-weight: 500;
+}
+
+.hero-stat-divider {
+  width: 1px;
+  height: 40px;
+  background: rgba(255,255,255,0.1);
+}
+
+@media (max-width: 768px) {
+  .hero-stats { gap: 1rem; }
+  .hero-stat-value { font-size: 1.2rem; }
+}
+</style>
