@@ -1,6 +1,8 @@
 server:
   port: 9094
 spring:
+  main:
+    allow-bean-definition-overriding: true
   application:
     name: invoice
   cache:
