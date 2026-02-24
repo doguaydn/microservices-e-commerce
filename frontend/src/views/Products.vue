@@ -9,6 +9,7 @@ const success = ref('')
 const searchQuery = ref('')
 
 const user = computed(() => JSON.parse(localStorage.getItem('user') || 'null'))
+const wishlistMap = ref({})
 
 const filteredProducts = computed(() => {
   if (!searchQuery.value) return products.value
@@ -50,15 +51,42 @@ const addToBasket = async (product) => {
   }
 }
 
-const addToWishlist = async (product) => {
+const fetchWishlist = async () => {
   if (!user.value) return
   try {
-    await wishlistApi.add({ userId: user.value.id, productId: product.id })
-    success.value = `${product.name} added to wishlist!`
-    clearMsg()
-  } catch (err) {
-    error.value = err.response?.data?.message || 'Already in wishlist'
-    clearMsg()
+    const res = await wishlistApi.getByUser(user.value.id)
+    const map = {}
+    for (const w of res.data || []) {
+      map[w.productId] = w.id
+    }
+    wishlistMap.value = map
+  } catch {}
+}
+
+const toggleWishlist = async (product) => {
+  if (!user.value) return
+  const wishlistItemId = wishlistMap.value[product.id]
+  if (wishlistItemId) {
+    try {
+      await wishlistApi.remove(wishlistItemId)
+      delete wishlistMap.value[product.id]
+      wishlistMap.value = { ...wishlistMap.value }
+      success.value = `${product.name} removed from wishlist`
+      clearMsg()
+    } catch {
+      error.value = 'Failed to remove from wishlist'
+      clearMsg()
+    }
+  } else {
+    try {
+      const res = await wishlistApi.add({ userId: user.value.id, productId: product.id })
+      wishlistMap.value = { ...wishlistMap.value, [product.id]: res.data?.id || true }
+      success.value = `${product.name} added to wishlist!`
+      clearMsg()
+    } catch (err) {
+      error.value = err.response?.data?.message || 'Failed to add to wishlist'
+      clearMsg()
+    }
   }
 }
 
@@ -70,7 +98,10 @@ const setQuantity = (id, val, max) => {
 
 const clearMsg = () => setTimeout(() => { success.value = ''; error.value = '' }, 3000)
 
-onMounted(fetchProducts)
+onMounted(() => {
+  fetchProducts()
+  fetchWishlist()
+})
 </script>
 
 <template>
@@ -104,7 +135,7 @@ onMounted(fetchProducts)
       <div v-for="p in filteredProducts" :key="p.id" class="product-card">
         <div class="product-image">
           &#128717;
-          <button v-if="user" class="wishlist-btn" @click="addToWishlist(p)">&#9825;</button>
+          <button v-if="user" :class="['wishlist-btn', wishlistMap[p.id] ? 'active' : '']" @click="toggleWishlist(p)">{{ wishlistMap[p.id] ? '\u2665' : '\u2661' }}</button>
         </div>
         <div class="product-body">
           <div class="product-name">{{ p.name }}</div>
