@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 public class HazelcastConfig {
 
     @Bean
-    public Config hazelcastConfig() {
+    public Config hazelCacheConfig() {
         Config config = new Config();
         config.setInstanceName("auth-hazelcast");
         config.setClusterName("auth-cluster");
