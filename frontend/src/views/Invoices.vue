@@ -1,10 +1,11 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { invoiceApi } from '../api'
+import { invoiceApi, authApi } from '../api'
 
 const invoices = ref([])
 const loading = ref(true)
 const error = ref('')
+const userMap = ref({})
 
 const user = computed(() => JSON.parse(localStorage.getItem('user') || 'null'))
 const isAdmin = computed(() => user.value?.role === 'ADMIN')
@@ -17,6 +18,14 @@ const fetchInvoices = async () => {
       ? await invoiceApi.getAll()
       : await invoiceApi.getByUser(user.value.id)
     invoices.value = res.data
+    if (isAdmin.value) {
+      const usersRes = await authApi.getUsers()
+      const map = {}
+      for (const u of usersRes.data || []) {
+        map[u.id] = u
+      }
+      userMap.value = map
+    }
   } catch {
     error.value = 'Failed to load invoices'
   } finally {
@@ -63,7 +72,13 @@ onMounted(fetchInvoices)
           <tbody>
             <tr v-for="inv in invoices" :key="inv.id">
               <td><strong>{{ inv.invoiceSlug || '#' + inv.id }}</strong></td>
-              <td v-if="isAdmin">User #{{ inv.userId }}</td>
+              <td v-if="isAdmin">
+                <template v-if="userMap[inv.userId]">
+                  <strong>{{ userMap[inv.userId].name }} {{ userMap[inv.userId].surname }}</strong><br>
+                  <span class="text-muted" style="font-size: 0.85rem;">{{ userMap[inv.userId].email }}</span>
+                </template>
+                <template v-else>User #{{ inv.userId }}</template>
+              </td>
               <td style="color: var(--accent); font-weight: 700;">${{ (inv.totalAmount || 0).toFixed(2) }}</td>
               <td><span class="badge badge-created">{{ inv.status || 'CREATED' }}</span></td>
               <td class="text-muted">{{ inv.createdAt ? new Date(inv.createdAt).toLocaleDateString() : '-' }}</td>
