@@ -19,7 +19,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Caching(evict = {
-            @CacheEvict(value = "products-all", allEntries = true)
+            @CacheEvict(value = "products-all", allEntries = true),
+            @CacheEvict(value = "products-low-stock", allEntries = true)
     })
     public ProductDto save(ProductDto param) {
         Product product = toEntity(param, null);
@@ -45,7 +46,10 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Caching(
             put = {@CachePut(value = "products", key = "#info.id")},
-            evict = {@CacheEvict(value = "products-all", allEntries = true)}
+            evict = {
+                    @CacheEvict(value = "products-all", allEntries = true),
+                    @CacheEvict(value = "products-low-stock", allEntries = true)
+            }
     )
     public ProductDto update(ProductDto info) {
         Product product = productRepository.findById(info.getId())
@@ -57,7 +61,8 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Caching(evict = {
             @CacheEvict(value = "products", key = "#id"),
-            @CacheEvict(value = "products-all", allEntries = true)
+            @CacheEvict(value = "products-all", allEntries = true),
+            @CacheEvict(value = "products-low-stock", allEntries = true)
     })
     public void delete(int id) {
         Product entity = productRepository.findById(id)
@@ -68,7 +73,10 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Caching(
             put = {@CachePut(value = "products", key = "#id")},
-            evict = {@CacheEvict(value = "products-all", allEntries = true)}
+            evict = {
+                    @CacheEvict(value = "products-all", allEntries = true),
+                    @CacheEvict(value = "products-low-stock", allEntries = true)
+            }
     )
     public ProductDto reduceStock(int id, int quantity) {
         Product product = productRepository.findById(id)
@@ -81,6 +89,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Cacheable(value = "products-low-stock", key = "#threshold")
     public List<ProductDto> getLowStock(int threshold) {
         return productRepository.findByQuantityLessThanEqual(threshold)
                 .stream().map(this::toDto).toList();

@@ -26,6 +26,11 @@ public class HazelcastConfig {
         productsAllConfig.setTimeToLiveSeconds(300);
         config.addMapConfig(productsAllConfig);
 
+        // low-stock cache - düşük stoklu ürünler (5 dk TTL)
+        MapConfig lowStockConfig = new MapConfig("products-low-stock");
+        lowStockConfig.setTimeToLiveSeconds(300);
+        config.addMapConfig(lowStockConfig);
+
         return config;
     }
 }
