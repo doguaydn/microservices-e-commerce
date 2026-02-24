@@ -7,16 +7,18 @@ public class LoginResponse {
     private String email;
     private String name;
     private String surname;
+    private String role;
 
     public LoginResponse() {
     }
 
-    public LoginResponse(int id, String token, String email, String name, String surname) {
+    public LoginResponse(int id, String token, String email, String name, String surname, String role) {
         this.id = id;
         this.token = token;
         this.email = email;
         this.name = name;
         this.surname = surname;
+        this.role = role;
     }
 
     public int getId() {
@@ -57,5 +59,13 @@ public class LoginResponse {
 
     public void setSurname(String surname) {
         this.surname = surname;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }

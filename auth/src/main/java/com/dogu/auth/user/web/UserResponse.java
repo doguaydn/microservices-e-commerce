@@ -6,4 +6,5 @@ public class UserResponse {
     public String surname;
     public String email;
     public String phone;
+    public String role;
 }

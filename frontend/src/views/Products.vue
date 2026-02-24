@@ -53,9 +53,10 @@ const addToBasket = async (product) => {
       productId: product.id,
       productName: product.name,
       price: product.price,
-      quantity: 1
+      quantity: getQuantity(product.id)
     })
-    success.value = `${product.name} added to cart!`
+    success.value = `${product.name} x${getQuantity(product.id)} added to cart!`
+    quantities.value[product.id] = 1
     window.dispatchEvent(new Event('cart-updated'))
     clearMsg()
   } catch {
@@ -86,6 +87,12 @@ const deleteProduct = async (id) => {
   } catch {
     error.value = 'Failed to delete product'
   }
+}
+
+const quantities = ref({})
+const getQuantity = (id) => quantities.value[id] || 1
+const setQuantity = (id, val, max) => {
+  quantities.value[id] = Math.max(1, Math.min(val, max, 99))
 }
 
 const clearMsg = () => setTimeout(() => { success.value = ''; error.value = '' }, 3000)
@@ -140,7 +147,12 @@ onMounted(fetchProducts)
           </div>
         </div>
         <div class="product-actions">
-          <button v-if="user" class="btn btn-accent btn-sm" style="flex:1" @click="addToBasket(p)">
+          <div v-if="user" class="qty-stepper" style="margin-right: 0.5rem;">
+            <button @click="setQuantity(p.id, getQuantity(p.id) - 1, p.quantity)">-</button>
+            <span>{{ getQuantity(p.id) }}</span>
+            <button @click="setQuantity(p.id, getQuantity(p.id) + 1, p.quantity)">+</button>
+          </div>
+          <button v-if="user" class="btn btn-accent btn-sm" style="flex:1" @click="addToBasket(p)" :disabled="p.quantity < 1">
             Add to Cart
           </button>
           <button class="btn btn-outline btn-sm" @click="deleteProduct(p.id)">&#128465;</button>

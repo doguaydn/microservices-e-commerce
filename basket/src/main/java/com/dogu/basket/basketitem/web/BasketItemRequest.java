@@ -4,4 +4,6 @@ public class BasketItemRequest {
     public int userId;
     public int productId;
     public int quantity;
+    public String productName;
+    public double price;
 }

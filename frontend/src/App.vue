@@ -8,6 +8,7 @@ const route = useRoute()
 
 const user = ref(JSON.parse(localStorage.getItem('user') || 'null'))
 const isLoggedIn = computed(() => !!user.value)
+const isAdmin = computed(() => user.value?.role === 'ADMIN')
 const cartCount = ref(0)
 
 const userInitials = computed(() => {
@@ -59,6 +60,7 @@ watch(() => route.path, fetchCartCount)
         <li><router-link to="/orders">My Orders</router-link></li>
         <li><router-link to="/wishlist">Wishlist</router-link></li>
         <li><router-link to="/invoices">Invoices</router-link></li>
+        <li v-if="isAdmin"><router-link to="/admin">Admin</router-link></li>
       </template>
     </ul>
 

@@ -154,6 +154,7 @@ public class UserServiceImpl implements UserService {
         dto.setEmail(entity.getEmail());
         dto.setPassword(entity.getPassword());
         dto.setPhone(entity.getPhone());
+        dto.setRole(entity.getRole().name());
         return dto;
     }
 }

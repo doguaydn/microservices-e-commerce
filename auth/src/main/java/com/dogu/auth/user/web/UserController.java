@@ -55,8 +55,8 @@ public class UserController {
     @PostMapping("/login")
     public LoginResponse login(@RequestBody UserLoginRequest request) {
         UserDto userDto = userServiceImpl.login(request.getEmail(), request.getPassword());
-        String token = jwtService.generateToken(userDto.getId(), userDto.getEmail(), userDto.getName());
-        return new LoginResponse(userDto.getId(), token, userDto.getEmail(), userDto.getName(), userDto.getSurname());
+        String token = jwtService.generateToken(userDto.getId(), userDto.getEmail(), userDto.getName(), userDto.getRole());
+        return new LoginResponse(userDto.getId(), token, userDto.getEmail(), userDto.getName(), userDto.getSurname(), userDto.getRole());
     }
 
     @PostMapping("/forgot-password")
@@ -82,6 +82,7 @@ public class UserController {
         response.surname = dto.getSurname();
         response.email = dto.getEmail();
         response.phone = dto.getPhone();
+        response.role = dto.getRole();
         return response;
     }
 

@@ -9,12 +9,23 @@ const routes = [
   { path: '/orders', name: 'Orders', component: () => import('../views/Orders.vue') },
   { path: '/wishlist', name: 'Wishlist', component: () => import('../views/Wishlist.vue') },
   { path: '/invoices', name: 'Invoices', component: () => import('../views/Invoices.vue') },
-  { path: '/admin', name: 'Admin', component: () => import('../views/Admin.vue') },
+  { path: '/admin', name: 'Admin', component: () => import('../views/Admin.vue'), meta: { requiresAdmin: true } },
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
+})
+
+router.beforeEach((to, from, next) => {
+  if (to.meta.requiresAdmin) {
+    const user = JSON.parse(localStorage.getItem('user') || 'null')
+    if (!user || user.role !== 'ADMIN') {
+      next('/products')
+      return
+    }
+  }
+  next()
 })
 
 export default router

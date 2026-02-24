@@ -239,6 +239,8 @@ public class BasketItemServiceImpl implements BasketItemService {
         entity.setUserId(request.getUserId());
         entity.setProductId(request.getProductId());
         entity.setQuantity(request.getQuantity());
+        entity.setProductName(request.getProductName());
+        entity.setPrice(request.getPrice());
         return entity;
     }
 
@@ -248,6 +250,8 @@ public class BasketItemServiceImpl implements BasketItemService {
         dto.setUserId(entity.getUserId());
         dto.setProductId(entity.getProductId());
         dto.setQuantity(entity.getQuantity());
+        dto.setProductName(entity.getProductName());
+        dto.setPrice(entity.getPrice());
         return dto;
     }
 }

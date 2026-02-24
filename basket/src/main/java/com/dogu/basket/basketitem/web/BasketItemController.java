@@ -70,6 +70,8 @@ public class BasketItemController {
         response.userId = dto.getUserId();
         response.productId = dto.getProductId();
         response.quantity = dto.getQuantity();
+        response.productName = dto.getProductName();
+        response.price = dto.getPrice();
         return response;
     }
 
@@ -78,6 +80,8 @@ public class BasketItemController {
         dto.setUserId(request.userId);
         dto.setProductId(request.productId);
         dto.setQuantity(request.quantity);
+        dto.setProductName(request.productName);
+        dto.setPrice(request.price);
         return dto;
     }
 }

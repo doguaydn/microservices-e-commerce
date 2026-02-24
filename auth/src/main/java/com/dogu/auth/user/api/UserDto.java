@@ -7,6 +7,7 @@ public class UserDto implements java.io.Serializable {
     private String email;
     private String password;
     private String phone;
+    private String role;
 
     public UserDto() {
     }
@@ -68,5 +69,12 @@ public class UserDto implements java.io.Serializable {
         this.phone = phone;
     }
 
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
 }
 
