@@ -46,7 +46,7 @@ onMounted(fetchFeatured)
     <section class="hero">
       <ThreeBackground mode="galaxy" :particle-count="4000" />
       <div class="hero-content">
-        <div class="hero-badge">New Collection 2025</div>
+        <div class="hero-badge">New Collection 2026</div>
         <h1>Discover Your <span class="gradient-text">Style</span></h1>
         <p>Premium products curated just for you. Experience the future of online shopping with fast delivery and secure payments.</p>
         <div class="hero-actions">

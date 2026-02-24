@@ -90,6 +90,6 @@ watch(() => route.path, fetchCartCount)
   <router-view />
 
   <footer class="footer">
-    <p>&copy; 2025 NovaMart. All rights reserved.</p>
+    <p>&copy; 2026 NovaMart. All rights reserved.</p>
   </footer>
 </template>
