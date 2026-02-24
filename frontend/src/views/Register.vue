@@ -16,8 +16,13 @@ const register = async () => {
   loading.value = true
   try {
     await authApi.register(form.value)
-    success.value = 'Account created! Redirecting to sign in...'
-    setTimeout(() => router.push('/login'), 1500)
+    // Auto login after register
+    const loginRes = await authApi.login({ email: form.value.email, password: form.value.password })
+    const user = loginRes.data
+    localStorage.setItem('user', JSON.stringify(user))
+    if (user.token) localStorage.setItem('token', user.token)
+    window.dispatchEvent(new CustomEvent('user-login', { detail: user }))
+    router.push('/products')
   } catch (err) {
     error.value = err.response?.data?.message || err.response?.data || 'Registration failed'
   } finally {
