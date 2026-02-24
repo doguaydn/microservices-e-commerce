@@ -74,10 +74,10 @@ onMounted(fetchOrders)
         <router-link to="/products" class="btn btn-primary mt-2">Start Shopping</router-link>
       </div>
 
-      <div v-for="order in orders" :key="order.id || order.orderId" class="order-card">
+      <div v-for="(order, idx) in orders" :key="order.id || order.orderId" class="order-card">
         <div class="order-header">
           <div>
-            <span class="order-id">Order #{{ order.orderId?.substring(0, 8) }}...</span>
+            <span class="order-id">Order #{{ orders.length - idx }}</span>
             <span class="order-date" style="margin-left: 1rem;">{{ order.createdAt }}</span>
           </div>
           <span :class="badgeClass(order.status)">{{ order.status }}</span>
