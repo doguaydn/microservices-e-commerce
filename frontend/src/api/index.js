@@ -22,6 +22,7 @@ api.interceptors.response.use(null, async (error) => {
 export const authApi = {
   register: (data) => api.post('/auth/users', data),
   login: (data) => api.post('/auth/users/login', data),
+  adminLogin: (data) => api.post('/auth/users/admin/login', data),
   getUsers: () => api.get('/auth/users'),
   getUser: (id) => api.get(`/auth/users/${id}`),
   deleteUser: (id) => api.delete(`/auth/users/${id}`),

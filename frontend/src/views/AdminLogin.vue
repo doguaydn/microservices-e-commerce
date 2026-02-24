@@ -13,12 +13,8 @@ const login = async () => {
   error.value = ''
   loading.value = true
   try {
-    const res = await authApi.login(form.value)
+    const res = await authApi.adminLogin(form.value)
     const user = res.data
-    if (user.role !== 'ADMIN') {
-      error.value = 'Access denied. Admin accounts only.'
-      return
-    }
     localStorage.setItem('user', JSON.stringify(user))
     if (user.token) localStorage.setItem('token', user.token)
     window.dispatchEvent(new CustomEvent('user-login', { detail: user }))

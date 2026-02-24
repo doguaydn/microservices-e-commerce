@@ -2,6 +2,7 @@ package com.dogu.auth.user.impl;
 
 import com.dogu.auth.events.UserEventPublisher;
 import com.dogu.auth.events.UserRegisteredEvent;
+import com.dogu.auth.exception.AccessDeniedException;
 import com.dogu.auth.exception.EmailAlreadyExistsException;
 import com.dogu.auth.exception.InvalidCredentialsException;
 import com.dogu.auth.exception.UserNotFoundException;
@@ -92,6 +93,20 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByEmail(email);
         if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
             throw new InvalidCredentialsException();
+        }
+        if (user.getRole() == Role.ADMIN) {
+            throw new AccessDeniedException("Admin accounts must use the admin login page.");
+        }
+        return toDto(user);
+    }
+
+    public UserDto adminLogin(String email, String password) {
+        User user = userRepository.findByEmail(email);
+        if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
+            throw new InvalidCredentialsException();
+        }
+        if (user.getRole() != Role.ADMIN) {
+            throw new AccessDeniedException("Access denied. Admin accounts only.");
         }
         return toDto(user);
     }

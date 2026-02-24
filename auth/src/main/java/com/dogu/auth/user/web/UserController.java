@@ -59,6 +59,13 @@ public class UserController {
         return new LoginResponse(userDto.getId(), token, userDto.getEmail(), userDto.getName(), userDto.getSurname(), userDto.getRole());
     }
 
+    @PostMapping("/admin/login")
+    public LoginResponse adminLogin(@RequestBody UserLoginRequest request) {
+        UserDto userDto = userServiceImpl.adminLogin(request.getEmail(), request.getPassword());
+        String token = jwtService.generateToken(userDto.getId(), userDto.getEmail(), userDto.getName(), userDto.getRole());
+        return new LoginResponse(userDto.getId(), token, userDto.getEmail(), userDto.getName(), userDto.getSurname(), userDto.getRole());
+    }
+
     @PostMapping("/forgot-password")
     public void forgotPassword(@RequestBody ForgotPasswordRequest request) {
         userServiceImpl.forgotPassword(request.getEmail(), request.getNewPassword());
