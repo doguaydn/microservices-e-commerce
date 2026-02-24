@@ -147,9 +147,10 @@ const badgeClass = (status) => `badge badge-${status?.toLowerCase()}`
 
 const onTabChange = (tab) => {
   activeTab.value = tab
-  if (tab === 'users' && users.value.length === 0) fetchUsers()
-  if (tab === 'products' && allProducts.value.length === 0) fetchProducts()
-  if (tab === 'invoices' && allInvoices.value.length === 0) fetchInvoices()
+  if (tab === 'overview' || tab === 'orders' || tab === 'stock') fetchAll()
+  if (tab === 'users') fetchUsers()
+  if (tab === 'products') fetchProducts()
+  if (tab === 'invoices') fetchInvoices()
 }
 
 onMounted(fetchAll)
